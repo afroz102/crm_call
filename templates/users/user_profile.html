@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>{{userProfile.full_name}}</title>
+{% endblock title %}
+
+{% block breadcrumb_heading %}
+{{userProfile.full_name}}
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="/users/">Users</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="#">{{user.full_name}}</a>
+</li>
+{% endblock breadcrumb %}
+
+
+{% block page_content %}
+
+<div class="row">
+    <div class="col-lg-8 col-xlg-6 col-sm-10 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <center>
+                    <img src="{{userProfile.profile_pic.url}}" class="rounded-circle" width="150">
+                    <h4 class="card-title mt-2">{{userProfile.full_name}}</h4>
+                    <h6 class="card-subtitle">{{userProfile.get_user_type_display}}</h6>
+                </center>
+            </div>
+            <div>
+                <hr>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 col-xs-6 b-r">
+                        <strong>Mobile</strong>
+                        <br>
+                        <p class="text-muted">{{userProfile.phone}}</p>
+                    </div>
+                    <div class="col-md-4 col-xs-6 b-r">
+                        <strong>Email</strong>
+                        <br>
+                        <p class="text-muted">{{userProfile.user.email}}</p>
+                    </div>
+                    <div class="col-md-4 col-xs-6">
+                        <strong>User Type</strong>
+                        <br>
+                        <p class="text-muted">{{userProfile.get_user_type_display}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer p-4 ">
+                <div class="row d-flex justify-content-around">
+                    <div class="col-lg col-md d-flex justify-content-center">
+                        <button class="btn btn-rounded btn-outline-warning" data-toggle="modal"
+                            data-target="#verticalcenter_update_in_user">
+                            <i class="fas fa-edit"></i>Update this user
+                        </button>
+                    </div>
+
+                    <div class="col-lg col-md d-flex justify-content-center">
+                        <button class="btn btn-rounded btn-outline-danger" data-toggle="modal"
+                            data-target="#verticalcenter_delete_in_user">
+                            <i class="mdi mdi-delete-forever"></i>Delete this user
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Delete Client button modal content -->
+<div id="verticalcenter_delete_in_user" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h3 class="modal-title font-weight-bold" id="vcenter" style="color: rgb(207, 33, 33);">
+                    Warning!!</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <p>
+                    Are you sure, you want to delete User <strong><i> "{{userProfile.full_name}}" </i></strong>?
+                </p>
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="btn btn-warning waves-effect float-left"
+                    data-dismiss="modal">Cancel</button>
+
+                <form action="{% url 'delete_user' userProfile.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger waves-effect float-right">Confirm</button>
+                </form>
+
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal content -->
+
+
+
+
+<!-- Update Client Details button modal content -->
+<div id="verticalcenter_update_in_user" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center bg-dark text-white">
+                <h3 class="modal-title font-weight-bold" id="vcenter">Update User Details</h3>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal form-material">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-6 form-group">
+                            <label for="id_first_name" class="col-md-12">First Name</label>
+                            <div class="col-md-12">
+                                {{form1.first_name}}
+                            </div>
+                        </div>
+
+                        <div class="col-6 form-group">
+                            <label for="id_last_name" class="col-md-12">Last Name</label>
+                            <div class="col-md-12">
+                                {{form1.last_name}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 form-group">
+                            <label for="id_email" class="col-md-12">Email </label>
+                            <div class="col-md-12">
+                                {{form1.email}}
+                            </div>
+                        </div>
+
+                        <div class="col-6 form-group">
+                            <label for="id_phone" class="col-md-12">Phone</label>
+                            <div class="col-md-12">
+                                {{form2.phone}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-6 form-group">
+                            <label for="id_user_type" class="col-md-12">User Type </label>
+                            <div class="col-md-12">
+                                {{form2.user_type}}
+                            </div>
+                        </div>
+                        <div class="col-6 form-group">
+                            <label for="id_active_status">Active status</label>
+                            {{form1.is_active}}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 form-group">
+                            <label for="id_profile_pic" class="col-md-12">Profile Pic
+                                <span>
+                                    <img src="{{userProfile.profile_pic.url}}" class="rounded-circle" width="50">
+                                </span>
+                            </label>
+
+                            <div class="col-md-12">
+                                <input type="file" name="profile_pic" accept="image/*" id="id_profile_pic"
+                                    class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                    <!-- footer submit button -->
+
+                    <div class="form-group d-flex justify-content-around text-center">
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-warning waves-effect"
+                                data-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col-sm-6">
+                            <button class="btn btn-success waves-effect">
+                                <i class="mdi mdi-account-edit"></i>
+                                <span> Update Profile </span>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+<!-- /.modal content -->
+
+
+{% endblock page_content %}

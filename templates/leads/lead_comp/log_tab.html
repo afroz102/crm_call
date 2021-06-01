@@ -1,0 +1,13 @@
+<div class="tab-pane fade show" id="lead_profile_log-tab" role="tabpanel" aria-labelledby="pills-lead_profile_log-tab">
+    <div class="card-body">
+
+        {% for logItem in leadLogs %}
+        <div class="card bg-light">
+            <div class="card-body">
+                <p class="card-text">{{logItem.log|safe}}</p>
+                <small>{{logItem.created_at}}</small>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Users</title>
+{% endblock title %}
+
+{% block breadcrumb_heading %}
+Users
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="#">Users</a>
+</li>
+{% endblock breadcrumb %}
+
+
+{% block page_content %}
+
+
+
+<div class="row mb-4">
+    <div class="col-lg col-md">
+        <a class="btn btn-rounded btn-outline-success float-right" href="{% url 'add_user' %}">
+            <i class="mdi mdi-account-plus mr-1"></i> Add a new User
+        </a>
+    </div>
+</div>
+
+
+<div class="row">
+    {% for item in users %}
+    <div class="col-sm-12 col-md-6 col-lg-4">
+        <div class="card pt-2 pl-2 bg-white">
+            <div class="d-flex flex-row">
+                <div class="p-2 ">
+                    <a href="{% url 'user_profile' item.id %}" style="text-decoration: none;">
+                        <div class="round align-self-center ">
+                            <i class="ti-user"></i>
+                        </div>
+                    </a>
+                </div>
+                <a href="{% url 'user_profile' item.id %}" style="text-decoration: none;">
+                    <div class="p-2">
+                        <h2 class="text-info mb-0">{{item.full_name}}</h2>
+                        <div>
+                            <span class="text-muted">{{item.user.email}}</span>
+                        </div>
+                        <small>{{item.get_user_type_display}}</small>
+                    </div>
+                </a>
+                <!-- <div class="align-self-center mr-3 ml-auto">
+                    <h4 class="text-info mb-0">User Type</h4>
+                </div> -->
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+
+
+{% endblock page_content %}

@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Add Lead</title>
+{% endblock title %}
+
+
+{% block breadcrumb_heading %}
+Add Lead
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="#">Add Lead</a>
+</li>
+{% endblock breadcrumb %}
+
+
+
+{% block page_content %}
+
+<div class="row">
+    <div class="col-sm-12 col-lg-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-info">
+                <h4 class="mb-0 text-white">New Lead Info</h4>
+            </div>
+
+            {% include 'partials/_flash_messages.html'%}
+
+            <form action="" method="POST" enctype="multipart/form-data">
+
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="card-body bg-light">
+                        <div class="row pt-3 m-2">
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_title">Title</label>
+                                    {{form.title}}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_contact_person">Contact Person Name</label>
+                                    {{form.contact_person}}
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_email">Email</label>
+                                    {{form.email}}
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_phone">Phone</label>
+                                    {{form.phone}}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_designation">Designation</label>
+                                    {{form.designation}}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_stage">Stage</label>
+                                    {{form.stage}}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label class="control-label" for="id_source">Source</label>
+                                    {{form.source}}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <div class="card-body">
+                        <button type="submit" class="btn btn-success mx-4 mb-4 float-right">
+                            <i class="fa fa-check"></i> SAVE
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- <div class="row mb-4">
+    <div class="col-md-3 col-sm-12">
+        <h4 class="card-title">With Progress</h4>
+        <p>Indicates toast's progress.</p>
+        <button type="button" class="btn btn-lg btn-block btn-outline-primary" id="custom_progress-bar">Show
+            Toast</button>
+    </div>
+</div> -->
+
+{% endblock page_content %}
+
+{% block custom_js %}
+<script>
+    // $(function () {
+    //     // Success Type
+    //     $('#ts-success').on('click', function () {
+    //         toastr.success('Have fun storming the castle!', 'Miracle Max Says');
+    //     });
+    //     // Progress Bar
+    //     $('#custom_progress-bar').on('click', function () {
+    //         toastr.error('Something went wrong!',
+    //             'Progress Bar', { "progressBar": true }
+    //         );
+    //     });
+    // })
+
+    // console.log(`status`, '{{status}}');
+    // if ('{{status}}' == 400) {
+    //     toastr.error('Please review all the fields and try again',
+    //         'Something went wrong!', { "progressBar": true }
+    //     );
+    // }
+</script>
+{% endblock custom_js %}

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Leads</title>
+{% endblock title %}
+
+
+{% block breadcrumb_heading %}
+Leads
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="#">Leads</a>
+</li>
+{% endblock breadcrumb %}
+
+
+{% block custom_css %}
+<!-- Latest Sortable -->
+<script src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"></script>
+<style>
+    .ghost {
+        opacity: .5;
+        background-color: lightblue;
+    }
+
+    .custom_lead_card_class:hover {
+        background-color: rgb(52, 52, 88) !important;
+    }
+
+    .custom_lead_title_class:hover {
+        color: rgb(0, 0, 0) !important;
+        font-weight: 700;
+    }
+</style>
+{% endblock custom_css %}
+
+
+{% block page_content %}
+
+
+<!-- {% if messages %}
+{% for message in messages %}
+<div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" role="alert">{{ message }}</div>
+{% endfor %}
+{% endif %} -->
+
+
+<div class="row mb-4">
+    <div class="col-lg col-md">
+        <a class="btn btn-rounded btn-outline-success float-right mx-2" href="{% url 'add_lead' %}">
+            <i class="mdi mdi-account-plus"></i> Add a new Lead
+        </a>
+    </div>
+</div>
+
+
+
+
+<div class="row">
+    <div class="col w-100">
+        <div class="card overflow-auto">
+            <div class="card-body">
+                <div class="row flex-nowrap" style="min-height: 400px;">
+
+                    {% for stageItem in sortedStages %}
+                    <div class="col">
+                        <div class="card" style="width: 15rem;">
+                            <h5 class="card-header text-center bg-inverse text-white">{{stageItem.stage_label}}</h5>
+                            <div class="card-body rounded px-0 stage_row"
+                                id="{{stageItem.stage_label}}_{{stageItem.id}}">
+
+                                <!-- {#% for leadItemkey, leadItemList in columnOrder.items %} -->
+
+                                {% for leadItemkey, leadItemList in columnOrder %}
+
+                                {% if leadItemkey == stageItem.stage_label %}
+                                {% for leadItem in leadItemList %}
+                                <div class="card bg-secondary rounded custom_lead_card_class" id="{{leadItem.id}}"
+                                    style="cursor: pointer;">
+                                    <div class="card-body w-100 text-center">
+                                        <a href="{% url 'lead_profile' leadItem.id %}">
+                                            <h4 class="my-0 text-white custom_lead_title_class">{{leadItem.title}}
+                                                <span class="float-right">
+                                                    <i class="ti-themify-favicon-alt text-primary" data-toggle="tooltip"
+                                                        data-placement="top"
+                                                        title="Hold and drag the card to change it's staus. OR, Click on the title to see the lead details"
+                                                        data-original-title="Tooltip on top"></i>
+                                                </span>
+                                            </h4>
+                                        </a>
+                                        <p class="text-white mb-0">{{leadItem.contact_person}}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                {% endif %}
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock page_content %}
+
+{% block custom_js %}
+<script>
+    // console.log(`object`, '{{messages.0}}');
+    // if ('{{messages}}') {
+    //     toastr.success('Form submitted successfully!!',
+    //         'success!', { "progressBar": true }
+    //     );
+    // }
+</script>
+<script>
+    const stage_row_class = document.getElementsByClassName('stage_row');
+    // console.log(`stage_row_class: `, stage_row_class[0].id);
+
+    //Collecting ids of all draggable card
+    var arrElemId = [];
+    for (let i = 0; i < stage_row_class.length; i++) {
+        arrElemId.push(stage_row_class[i]);
+    }
+
+    // Function to get index of stages, from where the target lead is moved and to moved 
+    function generateStrVal(childObj) {
+        var strVal = '';
+        var arr = [];
+        for (var i = 0; i < childObj.length; i++) {
+            arr.push(childObj[i].id);
+        }
+        return arr.join(',');
+    }
+
+    /* 
+        Looping through all ids colleced of draggable cards and put them all 
+        in same draggable class so that it can be dragged from one list to another list
+    */
+
+    for (let i = 0; i < arrElemId.length; i++) {
+        Sortable.create(arrElemId[i], {
+            group: 'shared',
+            ghostClass: 'ghost',
+            animation: 150,
+
+            // Element dragging ended
+            onEnd: function (event) {
+                var itemElem = event.item;
+                // dragged HTMLElement
+                // console.log(`event.item`, event.item); // teaget item
+                // console.log("target list: ", event.to.id);    // target list
+                // console.log("previous list: ", event.from.id);  // previous list
+                // console.log("element's old index within old parent: ", event.oldIndex);  // element's old index within old parent
+                // console.log("element's new index within new parent: ", event.newIndex);  // element's new index within new parent
+                // console.log("event.oldDraggableIndex: ", event.oldDraggableIndex); // element's old index within old parent, only counting draggable elements
+                // console.log("event.newDraggableIndex: ", event.newDraggableIndex); // element's new index within new parent, only counting draggable elements
+                // console.log(`event.from.children: `, event.from.children);
+                // console.log(`event.to.children: `, event.to.children);
+
+
+                var moved_from_stage = event.from.id;
+                var moved_to_stage = event.to.id;
+                var terget_lead_pk = event.item.id;
+                // console.log(`moved_from_stage: `, moved_from_stage);
+                // console.log(`moved_to_stage: `, moved_to_stage);
+                // console.log(`terget_lead_pk: `, terget_lead_pk);
+
+                var updatedIndexList = {
+                    "movedFromStageOrder": generateStrVal(event.from.children),
+                    "movedToStageOrder": generateStrVal(event.to.children),
+                };
+                // console.log('updatedIndexList: ', updatedIndexList);
+
+
+                const url = '/lead/indexing/status/update/';
+                fetch(url, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'aplication/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        "moved_from_stage": moved_from_stage,
+                        "moved_to_stage": moved_to_stage,
+                        "terget_lead_pk": terget_lead_pk,
+                        "updatedIndexList": updatedIndexList,
+                    }),
+                }).then(response => {
+                    // console.log('Response: ', Response);
+                    return response.json();
+                }).then(data => {
+                    // console.log('data: ', data);
+                });
+            },
+        });
+    }
+</script>
+{% endblock custom_js %}

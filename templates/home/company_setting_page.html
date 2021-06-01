@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>{{loggedInUser.company.company_name}} | Settings</title>
+{% endblock title %}
+
+{% block breadcrumb_heading %}
+Company Setting
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="#">Company Settings</a>
+</li>
+{% endblock breadcrumb %}
+
+
+
+{% block custom_css %}
+<!-- Latest Sortable -->
+<script src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"></script>
+<style>
+    /* for drage and drop of sortable stage */
+    .ghost {
+        opacity: .5;
+        background-color: lightblue;
+    }
+
+    /* On hover, stage card */
+    .custom_stage_card_class:hover {
+        background-color: rgb(51, 64, 114) !important;
+    }
+
+    /* Initial hide the delete icon */
+    .mdi-delete {
+        display: none;
+    }
+
+    /* On hover, on delete icon increase the size */
+    .custom_delete_icon_class:hover {
+        transform: scale(1.5);
+        transition: .04s ease-out;
+        color: rgb(163, 0, 0);
+    }
+
+    /* Class to use in script to hide unhide */
+    .show_delete_icon_class {
+        display: block;
+        color: rgb(88, 18, 18);
+    }
+
+    .hide_delete_icon_class {
+        display: none;
+    }
+</style>
+{% endblock custom_css %}
+
+
+
+
+{% block page_content %}
+
+<div class="row">
+    <div class="col-12">
+        <div class="row mb-2">
+            <div class="col-12">
+                <button class="btn btn-outline-success btn-rounded float-right" data-toggle="modal"
+                    data-target="#add_stages_for_leads">
+                    <i class="mdi mdi-plus-circle"></i> Add a New Stage
+                </button>
+
+                <!-- add stages for leads button modal content -->
+                <div id="add_stages_for_leads" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header text-center bg-info">
+                                <h3 class="modal-title font-weight-bold text-white" id="vcenter">Add a New Stage</h3>
+                                <button type="button" class="close text-danger" data-dismiss="modal"
+                                    aria-hidden="true">x</button>
+                            </div>
+                            <div class="modal-body">
+                                <form action="{% url 'add_new_satge_for_leads' %}" method="post">
+                                    {% csrf_token %}
+                                    <div class="form-group">
+                                        <label for="new_lead_stage">Stage Label</label>
+                                        <input class="form-control" type="text" name="new_lead_stage"
+                                            id="new_lead_stage">
+                                    </div>
+                                    <div class="modal-footer form-group">
+                                        <button type="button" class="btn btn-warning waves-effect float-left"
+                                            data-dismiss="modal">Cancel</button>
+                                        <button type="submit"
+                                            class="btn btn-danger waves-effect float-right">Confirm</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- /.modal content -->
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card pb-0">
+                    <div class="card-header py-4">
+                        <h4 class="card-title text-center">Satages Order For Leads
+                            <span class="ml-2" style="cursor: pointer;" data-toggle="tooltip" data-placement="top"
+                                title="Hold and drag the card to change it's order. Or, Click to delete it"
+                                data-original-title="Tooltip on top">
+                                <i class="ti-themify-favicon-alt text-primary"></i>
+                            </span>
+                        </h4>
+                    </div>
+                    {% if sortedStages %}
+                    <div class="card overflow-auto pb-0">
+                        <div class="card-body pb-0">
+                            <div class="row flex-nowrap" id="draggable_stage_row">
+
+                                {% for item in sortedStages %}
+                                <div class="col" style="cursor: pointer; max-width: 15rem;">
+                                    <div class="card stage_class p-0 m-0" style="min-width: 10rem;"
+                                        id="stage_{{item.id}}">
+                                        <div class="card bg-inverse rounded custom_stage_card_class">
+                                            <div class="card-body w-100 text-center" onmouseover="viewDeleteIcon(this)"
+                                                onmouseout="hideDeleteIcon(this)">
+                                                <h5 class="mb-0 text-white">{{item.stage_label}}
+
+                                                    <i class="mdi mdi-delete float-right custom_delete_icon_class"
+                                                        data-toggle="modal" data-target="#delete_stage"
+                                                        onclick="deleteSategeCard(this)" id="{{item.id}}"></i>
+                                                </h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                            </div>
+                        </div>
+                    </div>
+
+
+                    {% else %}
+                    <div class="card">
+                        <div class="card-body">
+                            <p class="card-text text-center">No Leads. Create One...</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- delete stage button modal content -->
+<div id="delete_stage" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h3 class="modal-title font-weight-bold" id="vcenter" style="color: rgb(207, 33, 33);">
+                    Warning!!</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure, you want to Delete this Stage?</p>
+            </div>
+
+            <div class="modal-footer" id="delete_stage_footer_modal">
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
+
+
+{% if sortedStages %}
+<div class="row">
+    <div class="col-sm-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title text-center">Move Leads from one stage to another</h4>
+            </div>
+
+            <div class="card-body">
+                <form action="{% url 'move_stage_lead' %}" method="POST">
+                    {% csrf_token %}
+
+                    <div class="row mb-4">
+                        <div class="form-group col-4">
+                            <label class="" for="stage_moved_from">Move From</label>
+                            <select class="custom-select mr-sm-2" name="stage_moved_from" id="stage_moved_from">
+                                <option selected="">Choose...</option>
+                                {% for stage in sortedStages %}
+                                <option value="{{stage.id}}">{{stage.stage_label}}</option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+
+                        <div class="form-group col-4">
+                            <label class="" for="stage_mpved_to">Move To</label>
+                            <select class="custom-select mr-sm-2" name="stage_moved_to" id="stage_mpved_to">
+                                <option selected="">Choose...</option>
+                                {% for stage in sortedStages %}
+                                <option value="{{stage.id}}">{{stage.stage_label}}</option>
+                                {% endfor %}
+                            </select>
+
+                        </div>
+                        <div class="form-group mt-4">
+                            <button type="submit" class="btn btn-success waves-effect mx-2 mt-1">Confirm</button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock page_content %}
+
+
+{% block custom_js %}
+<!-- hide unhide delete card icon  -->
+<script>
+    function viewDeleteIcon(item) {
+        // console.log(`item`, item);
+        var deleteIcon = $(item).children()[$(item).children().length - 1].children[0];
+        // console.log(`deleteIcon: `, deleteIcon);
+
+        $(deleteIcon).addClass('show_delete_icon_class');
+        $(deleteIcon).removeClass('hide_delete_icon_class');
+    }
+
+    function hideDeleteIcon(item) {
+        // console.log(`item`, item);
+        var deleteIcon = $(item).children()[$(item).children().length - 1].children[0];
+
+        // console.log(`icon: `, deleteIcon);
+
+        $(deleteIcon).addClass('hide_delete_icon_class');
+        $(deleteIcon).removeClass('show_delete_icon_class');
+    }
+</script>
+
+<script>
+    function deleteSategeCard(item) {
+        // console.log(`item: `, item);
+        // console.log(`item id: `, item.id);
+        const stage_id = item.id;
+        const footer_modal = document.getElementById('delete_stage_footer_modal');
+        $(footer_modal).children().remove();
+        $(footer_modal).append(`
+            <button type="button" class="btn btn-warning waves-effect float-left"
+                data-dismiss="modal">Cancel</button>
+            <button type="submit" data-stage_id="${stage_id}" 
+                onclick="confirmDeleteStageCard(this)" data-dismiss="modal"
+                class="btn btn-danger waves-effect float-right">Confirm</button>
+        `);
+    }
+
+    // Delete confirmation
+    function confirmDeleteStageCard(item) {
+        // console.log(`item`, item);
+        var stage_id = $(item).data('stage_id');
+        console.log(`stage_id: `, stage_id);
+
+        const url = `/stage/delete/${stage_id}/`;
+        fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'aplication/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({}),
+        }).then(response => {
+            // console.log('Response: ', response);
+            return response.json();
+        }).then(data => {
+            // console.log('data: ', data);
+            if (data.success) {
+                toastr.success(data.msg,
+                    'Success!', { "progressBar": true }
+                );
+                setTimeout(function () {
+                    window.location.reload();
+                }, 2500);
+            } else {
+                toastr.error(data.msg,
+                    'Error!', { "progressBar": true }
+                );
+            }
+        });
+    }
+</script>
+
+<script>
+    const draggable_stage_id = document.getElementById('draggable_stage_row');
+    // console.log(`draggable_stage_id: `, draggable_stage_id);
+
+    // console.log(`stage_class: `, stage_class[0]);
+
+    // var arrElemId = [];
+    // for (let i = 0; i < stage_class.length; i++) {
+    //     console.log("stage: ", stage_class[i].id);
+    //     arrElemId[i] = document.getElementById(stage_class[i].id);
+    // }
+
+    // console.log(`arrElemId: `, arrElemId);
+
+
+    // stage_class.map((element) => {
+    //     console.log(`element: `, element);
+    //     console.log(`xyz: `, xyz);
+    //     arrElemId.push(xyz);
+    // });
+
+
+
+    // for (let i = 0; i < arrElemId.length; i++) {
+    Sortable.create(draggable_stage_id, {
+        group: 'shared',
+        ghostClass: 'ghost',
+        animation: 150,
+
+        // Element dragging ended
+        onEnd: function (event) {
+            // dragged HTMLElement
+            // console.log(`event.item`, event.item)
+            // console.log("target list: ", event.to.id);    // target list(same in case of single list)
+            // console.log("previous list: ", event.from.id);  // previous list(same in case of single list)
+            // console.log("element's old index within old parent: ", event.oldIndex);  // element's old index within old parent
+            // console.log("element's new index within new parent: ", event.newIndex);  // element's new index within new parent
+            // console.log("event.oldDraggableIndex: ", event.oldDraggableIndex); // element's old index within old parent, only counting draggable elements
+            // console.log("event.newDraggableIndex: ", event.newDraggableIndex); // element's new index within new parent, only counting draggable elements
+
+
+            const draggedItemId = event.item.id;
+            const oldIndexItem = event.oldIndex;
+            const newIndexItem = event.newIndex;
+            // console.log(`draggedItemId: `, draggedItemId);
+            // console.log(`oldIndexItem: `, oldIndexItem);
+            // console.log(`newIndexItem: `, newIndexItem);
+
+            const url = '/stage-order/update/';
+
+            fetch(url, {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'aplication/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    "draggedItemId": draggedItemId,
+                    "oldIndexItem": oldIndexItem,
+                    "newIndexItem": newIndexItem,
+                }),
+            }).then(response => {
+                // console.log('Response: ', response);
+                return response.json();
+            }).then(data => {
+                // console.log('data: ', data);
+            });
+        },
+    });
+    // }
+</script>
+{% endblock custom_js %}

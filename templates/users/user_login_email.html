@@ -1,0 +1,10 @@
+{% autoescape off%}
+
+Hi {{user.username}}
+please click this link below to join
+
+http://{{domain}}{% url 'login' %}
+
+Your password is {{password}}
+
+{% endautoescape %}

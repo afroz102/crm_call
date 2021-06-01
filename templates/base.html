@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Favicon icon -->
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'assets/images/favicon.png' %}">
+
+    {% block title %}
+    {% endblock title %}
+
+
+    <!-- tooltip -->
+    <link href="{% static 'assets/libs/chartist-plugin-tooltips/dist/chartist-plugin-tooltip.css' %}" type="text/css"
+        rel="stylesheet">
+
+    <!-- Toaster css -->
+    <link href="{% static 'assets/extra-libs/toastr/dist/build/toastr.min.css' %}" rel="stylesheet">
+
+    <!-- needed css -->
+    <link href="{% static 'dist/css/style.min.css' %}" type="text/css" rel="stylesheet">
+
+
+    <!-- Latest Sortable -->
+    <script src="https://raw.githack.com/SortableJS/Sortable/master/Sortable.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <style>
+        #cover-spin {
+            position: fixed;
+            width: 100%;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 9999;
+            display: none;
+        }
+
+        @-webkit-keyframes spin {
+            from {
+                -webkit-transform: rotate(0deg);
+            }
+
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #cover-spin::after {
+            content: '';
+            display: block;
+            position: absolute;
+            left: 48%;
+            top: 40%;
+            width: 40px;
+            height: 40px;
+            border-style: solid;
+            border-color: black;
+            border-top-color: transparent;
+            border-width: 4px;
+            border-radius: 50%;
+            -webkit-animation: spin .8s linear infinite;
+            animation: spin .8s linear infinite;
+        }
+
+        #cover-spin {
+            position: fixed;
+            width: 100%;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.7);
+            z-index: 9999;
+            display: none;
+        }
+
+        @-webkit-keyframes spin {
+            from {
+                -webkit-transform: rotate(0deg);
+            }
+
+            to {
+                -webkit-transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #cover-spin::after {
+            content: '';
+            display: block;
+            position: absolute;
+            left: 48%;
+            top: 40%;
+            width: 40px;
+            height: 40px;
+            border-style: solid;
+            border-color: black;
+            border-top-color: transparent;
+            border-width: 4px;
+            border-radius: 50%;
+            -webkit-animation: spin .8s linear infinite;
+            animation: spin .8s linear infinite;
+        }
+    </style>
+
+    {% block custom_css %}
+    {% endblock custom_css %}
+
+</head>
+
+<body>
+
+
+    <div id="main-wrapper">
+        <div id="cover-spin"></div>
+
+        <!-- Topbar header - style you can find in pages.scss -->
+        {% include 'navbar/top_bar.html' %}
+        <!-- End Topbar header -->
+
+        <!-- Left Sidebar - style you can find in sidebar.scss  -->
+        {% include 'navbar/left_asidbar.html' %}
+        <!-- End Left Sidebar - style you can find in sidebar.scss  -->
+
+
+        <!-- Page wrapper  -->
+        <!-- ============================================================== -->
+        <div class="page-wrapper">
+
+            <!-- Bread crumb and right sidebar toggle -->
+            <div class="page-breadcrumb bg-light">
+                <div class="row">
+                    <div class="col-lg-3 col-md-4 col-xs-12 align-self-center">
+                        <h5 class="font-medium text-uppercase mb-0">
+                            {% block breadcrumb_heading %}
+
+                            {% endblock breadcrumb_heading %}
+                        </h5>
+                    </div>
+
+                    <div class="col-lg-9 col-md-8 col-xs-12 align-self-center">
+
+                        <nav aria-label="breadcrumb" class="mt-2 float-md-right float-left">
+                            <ol class="breadcrumb mb-0 justify-content-end p-0 bg-light">
+                                <li class="breadcrumb-item">
+                                    <a href="/">Home</a>
+                                </li>
+
+                                {% block breadcrumb %}
+
+                                {% endblock breadcrumb %}
+
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+            <!-- End Bread crumb and right sidebar toggle -->
+
+            <!-- Container fluid  -->
+            <div class="page-content container-fluid">
+
+                {% block page_content %}
+
+                {% endblock page_content %}
+
+            </div>
+            <!-- End Container fluid  -->
+
+
+
+        </div>
+        <!-- End Page wrapper  -->
+
+    </div>
+    <!-- End Wrapper -->
+
+
+    <div class="chat-windows"></div>
+
+    <!-- All Jquery -->
+    <!-- ============================================================== -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+
+    <!-- <script src="{#% static 'assets/libs/jquery/dist/jquery.min.js' %}"></script> -->
+    <!-- Jquery UI cdn -->
+    <!-- <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
+        integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30=" crossorigin="anonymous"></script> -->
+
+    <script src="{% static 'assets/libs/bootstrap/dist/js/bootstrap.min.js' %}"></script>
+    <!-- apps -->
+    <script src="{% static 'dist/js/app.min.js' %}"></script>
+    <script src="{% static 'dist/js/app.init.mini-sidebar.js' %}"' %}></script>
+    <!-- <script src="{% static ' dist/js/app-style-switcher.js' %}"></script> -->
+    <!-- slimscrollbar scrollbar JavaScript -->
+    <script src="{% static 'assets/libs/perfect-scrollbar/dist/perfect-scrollbar.jquery.min.js' %}"></script>
+    <script src="{% static 'assets/extra-libs/sparkline/sparkline.js' %}"></script>
+    <!--Wave Effects -->
+    <script src="{% static 'dist/js/waves.js' %}"></script>
+    <!--Menu sidebar -->
+    <script src="{% static 'dist/js/sidebarmenu.js' %}"></script>
+    <!--Custom JavaScript -->
+    <script src="{% static 'dist/js/custom.min.js' %}"></script>
+    <!-- This Page JS -->
+    <!-- <script src="{% static 'assets/libs/chartist/dist/chartist.min.js' %}"></script>
+    <script src="{% static 'dist/js/pages/chartist/chartist-plugin-tooltip.js' %}"></script> -->
+    <script src="{% static 'assets/extra-libs/c3/d3.min.js' %}"></script>
+    <script src="{% static 'assets/extra-libs/c3/c3.min.js' %}"></script>
+    <script src="{% static 'assets/libs/raphael/raphael.min.js' %}"></script>
+    <!-- <script src="{% static 'assets/libs/morris.js/morris.min.js' %}"></script> -->
+    <!-- <script src="{% static 'dist/js/pages/dashboards/dashboard1.js' %}"></script> -->
+    <script src="{% static 'assets/libs/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'assets/libs/fullcalendar/dist/fullcalendar.min.js' %}"></script>
+    <script src="{% static 'dist/js/pages/calendar/cal-init.js' %}"></script>
+
+    <!-- For toaster popup -->
+    <script src="{% static 'dist/js/custom.min.js' %}"></script>
+    <script src="{% static 'assets/extra-libs/toastr/dist/build/toastr.min.js' %}"></script>
+    <script src="{% static 'assets/extra-libs/toastr/toastr-init.js' %}"></script>
+
+    {% block custom_js %}
+    {% endblock custom_js %}
+</body>
+
+</html>

@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Add User</title>
+{% endblock title %}
+
+{% block breadcrumb_heading %}
+Add User
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="/users/">Users</a>
+</li>
+<li class="breadcrumb-item">
+    <a href="#">Add User</a>
+</li>
+{% endblock breadcrumb %}
+
+
+{% block page_content %}
+
+<div class="row">
+    <div class="col-sm-12 cl-md-8 col-lg-6 mx-auto">
+        <div class="card">
+            <div class="card-header bg-info">
+                <h4 class="text-white text-center">Add a New User</h4>
+            </div>
+
+            <div class="card-body">
+                <!-- For flash messages(Error/Succes messages) comming from backend -->
+                {% include 'partials/_flash_messages.html'%}
+                <div class="row">
+                    <div class="col-sm-12">
+                        <form method="POST" action="">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="id_first_name">First Name</label>
+                                        {{form1.first_name}}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="id_last_name">Last Name</label>
+                                        {{form1.last_name}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="id_email">Email</label>
+                                        {{form1.email}}
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label for="id_user_type">User Type</label>
+                                        {{form2.user_type}}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- <button type="button" class="btn btn-dark">Cancel</button> -->
+                            <button type="submit" class="btn btn-success mx-2 float-right">ADD USER</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- <script>
+    document.getElementById('id_first_name').classList.add('form-control');
+    document.getElementById('id_last_name').classList.add('form-control');
+    document.getElementById('id_email').classList.add('form-control');
+    document.getElementById('id_user_type').classList.add('form-control');
+</script> -->
+
+{% endblock page_content %}

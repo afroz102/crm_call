@@ -1,0 +1,271 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+<title>Company Profile</title>
+{% endblock title %}
+
+{% block breadcrumb_heading %}
+Company Setting
+{% endblock breadcrumb_heading %}
+
+{% block breadcrumb %}
+<li class="breadcrumb-item">
+    <a href="#">Company Settings</a>
+</li>
+{% endblock breadcrumb %}
+
+{% block page_content %}
+
+
+<div class="row">
+    <div class="col-lg-8 col-xlg-6 col-sm-10 mx-auto">
+        <div class="card">
+            <div class="card-body">
+                <center>
+                    <img src="{{userToAgency.agency.logo.url}}" class="rounded-circle" width="150">
+                    <h4 class="card-title mt-2">{{userToAgency.agency.agency_name}}</h4>
+                    <h6 class="card-subtitle">{{userToAgency.agency.city}}</h6>
+                </center>
+            </div>
+            <div>
+                <hr>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-lg-4 col-xs-6 b-r">
+                        <strong>Mobile</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.phone}}</p>
+                    </div>
+                    <div class="col-lg-4 col-xs-6 b-r">
+                        <strong>Email</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.email}}</p>
+                    </div>
+                    <div class="col-lg-4 col-xs-6">
+                        <strong>Address</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.address}}</p>
+                    </div>
+                </div>
+                <div>
+                    <hr>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-sm-12 col-lg-6">
+                        <strong>View Other's Resume</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.all_resume_access_auth}}</p>
+                    </div>
+                    <div class="col-sm-12 col-lg-6">
+                        <strong>Allow Recruiters to access all Jobs</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.recruiters_to_job_auth}}</p>
+                    </div>
+
+                    <div class="col-sm-12 col-lg-6">
+                        <strong>Allow Recruiters to access all resume in Jobs</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.recruiters_to_resume_auth}}</p>
+                    </div>
+
+                    <div class="col-sm-12 col-lg-6">
+                        <strong>Allow Franchise to access all resume in Jobs</strong>
+                        <br>
+                        <p class="text-muted">{{userToAgency.agency.franchise_to_resume_auth}}</p>
+                    </div>
+                </div>
+                <div>
+                    <hr>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 col-sm-12 b-r">
+                        <strong>Resume Points</strong>
+                        <br>
+                        <span class="text-muted">{{userToAgency.agency.resume_point}}</span>
+                        <button class="btn btn-sm btn-outline-success btn-rounded float-right" data-toggle="modal"
+                            data-target="#buy_resume_point">
+                            <i class="mdi mdi-plus-circle"></i> Buy More
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-footer p-4">
+                <div class="row">
+                    <div class="col-lg col-md">
+                        <button class="btn btn-rounded btn-outline-warning float-right" data-toggle="modal"
+                            data-target="#verticalcenter_update_agency">
+                            <i class="fas fa-edit"></i>Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Buy More Resume Point button modal content -->
+<div id="buy_resume_point" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center bg-info">
+                <h3 class="modal-title font-weight-bold text-white" id="vcenter">Buy Resume Point</h3>
+                <button type="button" class="close text-danger" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form action="{% url 'add_resume_point' %}" method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="id_resume_point">Add Points</label>
+                        <input class="form-control" type="number" name="resume_point" id="id_resume_point">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-warning waves-effect float-left"
+                            data-dismiss="modal">Cancel</button>
+
+                        <button type="submit" class="btn btn-danger waves-effect float-right">Confirm</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
+
+
+
+
+<!-- Update Agency Details button modal content -->
+<div id="verticalcenter_update_agency" class="modal bs-example-modal-lg" tabindex="-1" role="dialog"
+    aria-labelledby="vcenter" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center bg-dark text-white">
+                <h3 class="modal-title font-weight-bold" id="vcenter">Update User Details</h3>
+                <button type="button" class="close text-white" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal form-material">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-sm-6 col-lg-4 form-group">
+                            <label for="id_agency_name" class="col-md-12">Company Name</label>
+                            <div class="col-md-12">
+                                {{form.agency_name}}
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-lg-4 form-group">
+                            <label for="id_email" class="col-md-12">Email</label>
+                            <div class="col-md-12">
+                                {{form.email}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-6 col-lg-4 form-group">
+                            <label for="id_phone" class="col-md-12">Phone</label>
+                            <div class="col-md-12">
+                                {{form.phone}}
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-lg-4 form-group">
+                            <label for="id_city" class="col-md-12">City </label>
+                            <div class="col-md-12">
+                                {{form.city}}
+                            </div>
+                        </div>
+
+                        <div class="col-sm-6 col-lg-4 form-group">
+                            <label for="id_address" class="col-md-12">Address </label>
+                            <div class="col-md-12">
+                                {{form.address}}
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-4 form-group">
+                            <label for="id_profile_pic" class="col-md-12">Profile Pic
+                                <span><img src="{{user.logo.url}}" class="rounded-circle" width="50"></span>
+                            </label>
+
+                            <div class="col-md-12">
+                                <input type="file" name="logo" accept="image/*" id="id_logo" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12 col-lg-6 form-group">
+                            <label for="id_all_resume_access_auth" class="col-md-12">View Other's Resume </label>
+                            <div class="col-md-12">
+                                {{form.all_resume_access_auth}}
+                            </div>
+                        </div>
+
+                        <div class="col-sm-12 col-lg-6 form-group">
+                            <label for="id_recruiters_to_job_auth" class="col-md-12">Authorize Recruiters to view all
+                                Jobs</label>
+                            <div class="col-md-12">
+                                {{form.recruiters_to_job_auth}}
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-6 form-group">
+                            <label for="id_recruiters_to_resume_auth" class="col-md-12">Authorize Recruiters to view all
+                                Resume in a Jobs</label>
+                            <div class="col-md-12">
+                                {{form.recruiters_to_resume_auth}}
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-6 form-group">
+                            <label for="id_franchise_to_resume_auth" class="col-md-12">Authorize Franchises to view all
+                                Resume in a Jobs</label>
+                            <div class="col-md-12">
+                                {{form.franchise_to_resume_auth}}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- footer submit button -->
+
+                    <div class="form-group d-flex justify-content-around text-center">
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-warning waves-effect"
+                                data-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col-sm-6">
+                            <button class="btn btn-success waves-effect">
+                                <i class="mdi mdi-account-edit"></i>
+                                <span> Update </span>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
+
+<script>
+    document.getElementById('id_agency_name').classList.add('form-control');
+    document.getElementById('id_email').classList.add('form-control');
+    document.getElementById('id_phone').classList.add('form-control');
+    document.getElementById('id_city').classList.add('form-control');
+    document.getElementById('id_address').classList.add('form-control');
+    document.getElementById('id_logo').classList.add('form-control');
+    document.getElementById('id_all_resume_access_auth').classList.add('form-control');
+    document.getElementById('id_franchise_to_resume_auth').classList.add('form-control');
+    document.getElementById('id_recruiters_to_resume_auth').classList.add('form-control');
+    document.getElementById('id_recruiters_to_job_auth').classList.add('form-control');
+</script>
+
+
+{% endblock page_content %}

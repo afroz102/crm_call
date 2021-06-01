@@ -1,0 +1,276 @@
+{% load static %}
+<div class="tab-pane fade show" id="lead_details-tab" role="tabpanel" aria-labelledby="pills-lead_details-tab">
+    <div class="card-body">
+        <center>
+            <h2 class="card-title">
+                Title:
+                <!-- <a href="{#% url 'unit_details' booking.unit.id  %}">
+                </a> -->
+                <span class="text-muted ml-2"> {{lead.title}}
+                    <!-- <i class="fas fa-external-link-square-alt"></i> -->
+                </span>
+            </h2>
+
+            <h6 class="mt-1">
+                <b>Current State:</b>
+                <span class="text-muted ml-2">
+                    <h4 class="text-muted d-inline">
+                        <span class="badge badge-primary">{{lead.stage.stage_label}}</span>
+                    </h4>
+                </span>
+            </h6>
+        </center>
+
+        <div>
+            <hr>
+        </div>
+
+
+        <div class="row text-center">
+            <div class="col-md-3 col-xs-6 b-r">
+                <strong>Contact Person</strong>
+                <br>
+                <p class="text-muted">{{lead.contact_person}}</p>
+            </div>
+
+            <div class="col-md-3 col-xs-6 b-r">
+                <strong>Email</strong>
+                <br>
+                <p class="text-muted">{{lead.email}}</p>
+            </div>
+
+            <div class="col-md-3 col-xs-6 b-r">
+                <strong>Phone</strong>
+                <br>
+                <p class="text-muted">{{lead.phone}}</p>
+            </div>
+
+            <div class="col-md-3 col-xs-6 b-r">
+                <strong>Designation</strong>
+                <br>
+                <p class="text-muted">{{lead.designation}}</p>
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row  text-center py-4">
+            <div class="col-md-4 col-xs-12 b-r mx-auto">
+                <strong>Source:</strong>
+                <h2 class="text-muted d-inline">
+                    <span class="badge badge-primary">{{lead.source}}</span>
+                </h2>
+            </div>
+            <!-- <div class="col-md-6 col-xs-6 b-r">
+                        <strong>Lead Status</strong>
+                        <br>
+                        
+                    </div> -->
+        </div>
+
+    </div>
+
+    <div class="card-footer px-0">
+        <div class="row">
+            <div class="col-lg col-md d-flex justify-content-center">
+                <button class="btn btn-rounded btn-outline-warning" data-toggle="modal"
+                    data-target="#update_booking_details">
+                    <i class="fas fa-edit mr-1"></i>Update Details
+                </button>
+            </div>
+
+            <div class="col-lg col-md d-flex justify-content-center">
+                <button class="btn btn-rounded btn-outline-danger" data-toggle="modal"
+                    data-target="#cancel_booking_details">
+                    <i class="mdi mdi-delete-forever mr-1"></i>Cancel Booking
+                </button>
+            </div>
+
+            <div class="col-lg col-md d-flex justify-content-center">
+                <button class="btn btn-rounded btn-outline-success" data-toggle="modal"
+                    data-target="#completed_booking_details">
+                    <i class="fa fa-check mr-1"></i>Booking Completed
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Booking Completed button modal content -->
+<div id="completed_booking_details" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center bg-primary">
+                <h3 class="modal-title font-weight-bold text-white" id="vcenter">
+                    Booking Completed!!</h3>
+                <button type="button" class="close text-warning" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <p>You want to mark this Booking Completed?</p>
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="btn btn-warning waves-effect float-left"
+                    data-dismiss="modal">Cancel</button>
+
+                <form action="{#% url 'booking_completed' booking.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success waves-effect float-right">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
+
+<!-- Cancel Booking button modal content -->
+<div id="cancel_booking_details" class="modal" tabindex="-1" role="dialog" aria-labelledby="vcenter" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center">
+                <h3 class="modal-title font-weight-bold" id="vcenter" style="color: rgb(207, 33, 33);">
+                    Warning!!</h3>
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure, you want to Cancel this Booking?</p>
+            </div>
+
+            <div class="modal-footer">
+
+                <button type="button" class="btn btn-warning waves-effect float-left"
+                    data-dismiss="modal">Cancel</button>
+
+                <form action="{#% url 'cancel_booking' booking.id %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger waves-effect float-right">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
+
+
+
+
+<!-- Update Booking Details button modal content -->
+<div id="update_booking_details" class="modal bs-example-modal-lg" tabindex="-1" role="dialog" aria-labelledby="vcenter"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h3 class="modal-title font-weight-bold text-center" id="vcenter">Update Booking Details</h3>
+                <button type="button" class="close text-warning" data-dismiss="modal" aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form action="" method="post" enctype="multipart/form-data" class="form-horizontal form-material">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_unit" class="col-md-12">Unit Name</label>
+                            <div class="col-md-12">
+                                {{form.unit}}
+                            </div>
+                        </div>
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_booking_source" class="col-md-12">Booking Source</label>
+                            <div class="col-md-12">
+                                {{form.booking_source}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_booking_status" class="col-md-12">Booking Status</label>
+                            <div class="col-md-12">
+                                {{form.booking_status}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_address" class="col-md-12">Address</label>
+                            <div class="col-md-12">
+                                {{form.address}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_city" class="col-md-12">City</label>
+                            <div class="col-md-12">
+                                {{form.city}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_country" class="col-md-12">Country</label>
+                            <div class="col-md-12">
+                                {{form.country}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_no_of_guest" class="col-md-12">No. Of Guests</label>
+                            <div class="col-md-12">
+                                {{form.no_of_guest}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_checkin_date" class="col-md-12">Checkin Date</label>
+                            <div class="col-md-12">
+                                {{form.checkin_date}}
+                            </div>
+                        </div>
+
+
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_checkin_time" class="col-md-12">Checkin Time</label>
+                            <div class="col-md-12">
+                                {{form.checkin_time}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_checkout_date" class="col-md-12">Checkout Date</label>
+                            <div class="col-md-12">
+                                {{form.checkout_date}}
+                            </div>
+                        </div>
+
+                        <div class="form-group col-sm-12 col-md-6 col-lg-4">
+                            <label for="id_checkin_time" class="col-md-12">checkout Time</label>
+                            <div class="col-md-12">
+                                {{form.checkout_time}}
+                            </div>
+                        </div>
+
+
+                    </div>
+
+
+
+                    <!-- footer submit button -->
+                    <div class="mt-2 form-group d-flex justify-content-around text-center">
+                        <div class="col-sm-6">
+                            <button type="button" class="btn btn-warning waves-effect"
+                                data-dismiss="modal">Cancel</button>
+                        </div>
+                        <div class="col-sm-6">
+                            <button class="btn btn-success waves-effect">
+                                <i class="mdi mdi-account-edit"></i>
+                                <span> Update</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
