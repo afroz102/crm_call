@@ -121,8 +121,8 @@ Company Setting
                             <div class="row flex-nowrap" id="draggable_stage_row">
 
                                 {% for item in sortedStages %}
-                                <div class="col" style="cursor: pointer; max-width: 15rem;">
-                                    <div class="card stage_class p-0 m-0" style="min-width: 10rem;"
+                                <div class="col" style="cursor: pointer; max-width: 15rem;" id="{{item.id}}">
+                                    <div class=" card stage_class p-0 m-0" style="min-width: 10rem;"
                                         id="stage_{{item.id}}">
                                         <div class="card bg-inverse rounded custom_stage_card_class">
                                             <div class="card-body w-100 text-center" onmouseover="viewDeleteIcon(this)"
@@ -347,9 +347,9 @@ Company Setting
             const draggedItemId = event.item.id;
             const oldIndexItem = event.oldIndex;
             const newIndexItem = event.newIndex;
-            // console.log(`draggedItemId: `, draggedItemId);
-            // console.log(`oldIndexItem: `, oldIndexItem);
-            // console.log(`newIndexItem: `, newIndexItem);
+            console.log(`draggedItemId: `, draggedItemId);
+            console.log(`oldIndexItem: `, oldIndexItem);
+            console.log(`newIndexItem: `, newIndexItem);
 
             const url = '/stage-order/update/';
 

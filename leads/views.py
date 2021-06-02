@@ -212,11 +212,19 @@ def updateLeadStatus(request):
 def leadProfile(request, lead_pk):
     loggedInUser = get_object_or_404(
         UserProfile, user=request.user, is_deleted=False,)
+    company = loggedInUser.company
 
     lead = get_object_or_404(Lead, id=lead_pk, is_deleted=False)
 
+    # For displaying stages in sorted order
+    stages = LeadStage.objects.filter(company=company)
+    orderIndexObj = StageIndexOrder.objects.get(company=company)
+    # some operation to sort stages
+    orderIndexList = orderIndexObj.reorder_string.split(',')
+    sortedStages = sortQueryObj(stages, orderIndexList)
+
     # If lead doesn't belong to the company. display error forbidden message
-    if lead.company != loggedInUser.company:
+    if lead.company != company:
         return HttpResponseForbidden()
 
     leadLogs = LeadProfileLog.objects.filter(
@@ -232,6 +240,7 @@ def leadProfile(request, lead_pk):
         "leadLogs": leadLogs,
         "leadNotes": leadNotes,
         "leadTasks": leadTasks,
+        "sortedStages": sortedStages,
     }
     return render(request, 'leads/lead_profile.html', context)
 
