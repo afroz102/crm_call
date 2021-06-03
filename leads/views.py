@@ -273,7 +273,7 @@ def updateLeadProfile(request, lead_pk):
             text = f"<i>{loggedInUser.full_name}</i>, updated the title of lead to <b>{title}</b>"
 
         elif lead_stage:
-            print("stage updated")
+            # print("stage updated")
             prevLeadStatus = lead.stage
             updatedLeadStatus = get_object_or_404(LeadStage, id=lead_stage)
             lead.stage = updatedLeadStatus
@@ -299,7 +299,7 @@ def updateLeadProfile(request, lead_pk):
                 curStrLogicList = curStageLoginStr.element_index_logic.split(
                     ',')
                 # print("curStrLogicList: ", curStrLogicList)
-                curStrLogicList.append(lead_pk)
+                curStrLogicList.append(str(lead_pk))
                 # print("curStrLogicList2: ", curStrLogicList)
                 curStageLoginStr.element_index_logic = ','.join(
                     curStrLogicList)
@@ -486,7 +486,7 @@ def updateLeadStatusInProfile(request):
                                           stage=prevLeadStatus)
     prevStrLogicList = prevStageLoginStr.element_index_logic.split(',')
     # print("prevStrLogicList: ", prevStrLogicList)
-    prevStrLogicList.remove(leadId)
+    prevStrLogicList.remove(str(leadId))
     # print("prevStrLogicList2: ", prevStrLogicList)
     prevStageLoginStr.element_index_logic = ','.join(prevStrLogicList)
     prevStageLoginStr.save()
@@ -500,12 +500,12 @@ def updateLeadStatusInProfile(request):
     else:
         curStrLogicList = curStageLoginStr.element_index_logic.split(',')
         # print("curStrLogicList: ", curStrLogicList)
-        curStrLogicList.append(leadId)
+        curStrLogicList.append(str(leadId))
         # print("curStrLogicList2: ", curStrLogicList)
         curStageLoginStr.element_index_logic = ','.join(curStrLogicList)
     curStageLoginStr.save()
 
-    text = f"<i>{loggedInUser.full_name}</i>, updated the status of the lead stage to <b>{updatedLeadStatus.stage_label}</b>"
+    text = f"<i>{loggedInUser.full_name}</i>, updated the status of the lead stage to <b>{leadStage}</b>"
     LeadProfileLog.objects.create(lead=lead, log=text)
 
     return JsonResponse({
