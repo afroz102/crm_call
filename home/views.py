@@ -2,7 +2,7 @@ import json
 
 # from django.core.serializers import serialize
 from django.http.response import Http404, HttpResponseForbidden, JsonResponse
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
 # from django.http import JsonResponse
 # from django.contrib.auth.models import User
@@ -92,16 +92,18 @@ def updateStageOrder(request):
 
         # Split string by comma
         orderList = stageOrderIndex.reorder_string.split(',')
-        # print("orderList: ", orderList)
+        # print("orderList1: ", orderList)
 
         # Delete old index of dragged element
         del orderList[oldIndexItem]
-        # print("orderList: ", orderList)
+        # print("orderList2: ", orderList)
 
         # Add dragged element to new index
         orderList.insert(newIndexItem, draggedItemId)
-        # print("orderList: ", orderList)
-        stageOrderIndex.reorder_string = ",".join(orderList)
+        # print("orderList3: ", orderList)
+        newStr = ",".join(orderList)
+        # print("new str: ", newStr)
+        stageOrderIndex.reorder_string = newStr
         stageOrderIndex.save()
 
         return JsonResponse({"msg": "success"})
@@ -114,12 +116,9 @@ def deleteStage(request, stage_pk):
         loggedInUser = UserProfile.objects.get(user=request.user)
         company = loggedInUser.company
 
-        try:
-            stage = LeadStage.objects.get(id=stage_pk)
-            if company != stage.company:
-                return HttpResponseForbidden()
-        except LeadStage.DoesNotExist:
-            raise Http404()
+        stage = get_object_or_404(LeadStage, id=stage_pk)
+        if company != stage.company:
+            return HttpResponseForbidden()
 
         try:
             stageOrder = StageElementIndexLogic.objects.get(stage=stage_pk)
@@ -133,6 +132,17 @@ def deleteStage(request, stage_pk):
         if stageOrder.element_index_logic == '' or (
                 stageOrder.element_index_logic is None):
             stage.delete()
+
+            stageLogicOrder = StageIndexOrder.objects.get(company=company)
+            logicOrderStrList = stageLogicOrder.reorder_string.split(',')
+
+            # print("logicOrderStrList: ", logicOrderStrList)
+            logicOrderStrList.remove(str(stage_pk))
+            # print(logicOrderStrList)
+            newStrOrder = ",".join(logicOrderStrList)
+            # print("newStrOrder: ", newStrOrder)
+            stageLogicOrder.reorder_string = newStrOrder
+            stageLogicOrder.save()
             return JsonResponse({
                 "success": True,
                 "msg": "Successfully deleted!!",

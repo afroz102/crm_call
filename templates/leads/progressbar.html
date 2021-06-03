@@ -1,9 +1,7 @@
+{% block custom_css %}
 <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet'>
 
 
-<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
-<script type='text/javascript'
-    src='https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.bundle.min.js'></script>
 
 <style>
     .progress_card {
@@ -22,6 +20,8 @@
         list-style-type: none;
         font-size: 13px;
         /* width: 14%; */
+        min-width: 8%;
+        max-width: 25%;
         float: left;
         position: relative;
         font-weight: 400
@@ -38,7 +38,7 @@
     #progressbar li:before {
         width: 40px;
         height: 40px;
-        line-height: 45px;
+        line-height: 40px;
         display: block;
         font-size: 20px;
         background: #C5CAE9;
@@ -101,7 +101,7 @@
             /* for check icon*/
     }
 </style>
-
+{% endblock custom_css %}
 
 <div class='snippet-body'>
     <div class="container mx-auto">
@@ -109,14 +109,9 @@
 
             <div class="row d-flex justify-content-center align-contents-center">
                 <div class="col-12">
-                    <ul id="progressbar" class="text-center">
+                    <ul id="progressbar" class="text-center w-100">
                         {% for stage in sortedStages %}
-                        <li class="step0" id="stage_{{stage.id}}" style="min-width: 8%; max-width: 20%;">
-                            {{stage.stage_label}}</li>
-                        <li class="step0" id="stage1_{{stage.id}}" style="min-width: 8%; max-width: 20%;">
-                            {{stage.stage_label}}</li>
-                        <li class="step0" id="stage2_{{stage.id}}" style="min-width: 8%; max-width: 20%;">
-                            {{stage.stage_label}}</li>
+                        <li class="step0" id="stage_{{stage.id}}">{{stage.stage_label}}</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -126,102 +121,84 @@
 </div>
 
 <script>
-
     var leadStatus = '{{lead.stage.id}}';
-    var leadStatusId = `stage_${leadStatus}`;
+    var currLeadStatusId = `stage_${leadStatus}`;
+    // console.log(`currLeadStatusId: `, currLeadStatusId);
 
-    console.log(`leadStatusId: `, leadStatusId)
+    var orderStrList = '{{stageOrderIndexStr}}'.split(',');
+    // console.log("orderStr: ", orderStrList);
 
+    const leadStatusIds = orderStrList.map(elem => `stage_${elem}`);
+    // console.log(`leadStatusIds: `, leadStatusIds);
 
-    // updateleadStatus(leadStatusId);
-    document.getElementById(leadStatusId).classList.add('active');
+    // Add dynamic width to every list element
+    var liClasses = document.getElementsByClassName('step0');
 
-    function updateLeadStatus(status) {
-        if (status === leadStatusId) {
-        } else if (status === 'stage_2') {
-            document.getElementById('stage_2').classList.add('active');
-            document.getElementById('stage_3').classList.remove('active');
-            document.getElementById('stage_4').classList.remove('active');
-            document.getElementById('stage_5').classList.remove('active');
-            document.getElementById('stage_6').classList.remove('active');
-            document.getElementById('stage_7').classList.remove('active');
-        } else if (status === 'stage_3') {
-            document.getElementById('stage_2').classList.add('active');
-            document.getElementById('stage_3').classList.add('active');
-            document.getElementById('stage_4').classList.remove('active');
-            document.getElementById('stage_5').classList.remove('active');
-            document.getElementById('stage_6').classList.remove('active');
-            document.getElementById('stage_7').classList.remove('active');
-        } else if (status === 'stage_4') {
-            document.getElementById('stage_2').classList.add('active');
-            document.getElementById('stage_3').classList.add('active');
-            document.getElementById('stage_4').classList.add('active');
-            document.getElementById('stage_5').classList.remove('active');
-            document.getElementById('stage_6').classList.remove('active');
-            document.getElementById('stage_7').classList.remove('active');
-        } else if (status === 'stage_5') {
-            document.getElementById('stage_2').classList.add('active');
-            document.getElementById('stage_3').classList.add('active');
-            document.getElementById('stage_4').classList.add('active');
-            document.getElementById('stage_5').classList.add('active');
-            document.getElementById('stage_6').classList.remove('active');
-            document.getElementById('stage_7').classList.remove('active');
-        } else if (status === 'stage_6') {
-            document.getElementById('stage_2').classList.add('active');
-            document.getElementById('stage_3').classList.add('active');
-            document.getElementById('stage_4').classList.add('active');
-            document.getElementById('stage_5').classList.add('active');
-            document.getElementById('stage_6').classList.add('active');
-            document.getElementById('stage_7').classList.remove('active');
-        } else if (status === 'stage_7') {
-            document.getElementById('stage_2').classList.add('active');
-            document.getElementById('stage_3').classList.add('active');
-            document.getElementById('stage_4').classList.add('active');
-            document.getElementById('stage_5').classList.add('active');
-            document.getElementById('stage_6').classList.add('active');
-            document.getElementById('stage_7').classList.add('active');
-        }
+    for (let i = 0; i < liClasses.length; i++) {
+        // console.log(`element`, $(liClasses[i]));
+        liClasses[i].style.width = `${100 / leadStatusIds.length}%`;
+    };
+
+    // Function to add active class list in all the li
+    function updateLeadStatus(leadStatusIds, currStatus) {
+        for (let i = 0; i < leadStatusIds.length; i++) {
+            document.getElementById(leadStatusIds[i]).classList.add('active');
+            // console.log(`element: `, leadStatusIds[i])
+            if (leadStatusIds[i] == currStatus) {
+                break;
+            };
+        };
     }
 
+    updateLeadStatus(leadStatusIds, currLeadStatusId);
 
-    var prevBookingStatus = leadStatusId;
+
+
+    var prev_lead_status = currLeadStatusId;
 
     $('.step0').on('click', function (e) {
-        const bookin_status = this.id;
-        const bookingId = '{{booking.id}}'
-        // console.log(`bookin_status: `, bookin_status);
-        // console.log(`bookingId: `, bookingId);
-        updateLeadStatus(bookin_status);
+        const updated_lead_status = this.id;
 
+        // console.log(`updated_lead_status: `, updated_lead_status);
 
-        // const url = '/update_lead_status_in_profile/';
-        // fetch(url, {
-        //     method: "POST",
-        //     headers: {
-        //         "Content-Type": 'application/json',
-        //         'X-CSRFToken': '{{ csrf_token }}'
-        //     },
-        //     body: JSON.stringify({
-        //         "bookingId": bookingId,
-        //         "currentBookingStatus": bookin_status,
-        //         "prevBookingStatus": prevBookingStatus,
-        //     })
-        // }).then(response => {
-        //     // console.log('response: ', response);
-        //     let jsonRes = response.json();
-        //     if (response.status >= 200 && response.status < 300) {
-        //         // console.log('json response: ', jsonRes)
-        //         return jsonRes;
-        //     } else {
-        //         return json.then("Error: ", Promise.reject.bind(Promise));
-        //     }
-        // }).then(data => {
-        //     // console.log('data: ', data);
-        //     // updateBookingStatus(bookin_status);
-        //     prevBookingStatus = bookin_status;
-        // }).catch((error) => {
-        //     console.log(error);
-        // });
+        // show spinner
+        $('#cover-spin').show(0);
+
+        const url = '/lead/profile/status/update/';
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                "leadId": '{{lead.id}}',
+                "prevLeadStatus": prev_lead_status,
+                "updatedLeadStatus": updated_lead_status,
+            })
+        }).then(response => {
+            // console.log('response: ', response);
+            if (response.status >= 200 && response.status < 300) {
+
+                // console.log('json response: ', jsonRes)
+                return response.json();
+            } else {
+                return json.then("Error: ", Promise.reject.bind(Promise));
+            }
+        }).then(data => {
+            // console.log('data: ', data);
+            for (let i = 0; i < leadStatusIds.length; i++) {
+                document.getElementById(leadStatusIds[i]).classList.remove('active');
+                // console.log(`element: `, leadStatusIds[i]);
+            };
+            // hide spinner
+            updateLeadStatus(leadStatusIds, updated_lead_status);
+            prev_lead_status = updated_lead_status;
+            window.location.reload();
+            // $('#cover-spin').hide(0);
+        }).catch((error) => {
+            console.log(error);
+        });
     })
 
 </script>

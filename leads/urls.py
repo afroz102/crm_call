@@ -26,4 +26,7 @@ urlpatterns = [
     path('lead/task/<int:lead_task_pk>/delete/',
          views.deleteLeadTask, name="delete_lead_task"),
 
+    # Inside lead profile
+    path('lead/profile/status/update/',
+         views.updateLeadStatusInProfile, name="update_lead_status_in_profile"),
 ]

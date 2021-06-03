@@ -4,6 +4,7 @@ from collections import defaultdict
 # from django.core.serializers import serialize
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.messages.api import success
 from django.http import JsonResponse, Http404
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
@@ -49,12 +50,6 @@ def leadPage(request):
             # print("Hello")
             orderIndexLogicObj = StageElementIndexLogic.objects.create(
                 company=company, stage=stageItem)
-
-        # print("orderIndexLogicObj1: ", serializers.serialize(
-        #     'json', [orderIndexLogicObj]))
-
-        # print(stageItem.stage_label, ' - ',
-        #       orderIndexLogicObj.element_index_logic)
 
         # For listing all sorted index in a seperate stage fields
         orderIndexList = []
@@ -234,6 +229,8 @@ def leadProfile(request, lead_pk):
     leadTasks = LeadTask.objects.filter(
         lead=lead_pk, is_deleted=False).order_by('-created_at')
 
+    # print("orderIndexList: ", orderIndexList)
+
     context = {
         "loggedInUser": loggedInUser,
         "lead": lead,
@@ -241,10 +238,13 @@ def leadProfile(request, lead_pk):
         "leadNotes": leadNotes,
         "leadTasks": leadTasks,
         "sortedStages": sortedStages,
+        # "stageOrderIndexList": json.dumps(orderIndexList),
+        "stageOrderIndexStr": orderIndexObj.reorder_string,
     }
     return render(request, 'leads/lead_profile.html', context)
 
 
+# Update Lead Profile
 @login_required(login_url='login')
 def updateLeadProfile(request, lead_pk):
     if request.method == 'POST':
@@ -258,12 +258,14 @@ def updateLeadProfile(request, lead_pk):
             return HttpResponseForbidden()
 
         title = request.POST.get('lead_title')
-        lead_stage = request.POST.get('stage')
+        lead_stage = request.POST.get('lead_stage')
         contact_person = request.POST.get('contact_name')
         contact_email = request.POST.get('contact_email')
         phone = request.POST.get('contact_phone')
         designation = request.POST.get('designation')
         source = request.POST.get('source')
+
+        # print("lead_stage: ", lead_stage, '-', type(lead_stage))
 
         if title:
             lead.title = title
@@ -271,8 +273,37 @@ def updateLeadProfile(request, lead_pk):
             text = f"<i>{loggedInUser.full_name}</i>, updated the title of lead to <b>{title}</b>"
 
         elif lead_stage:
-            lead.lead_stage = lead_stage
-            text = f"<i>{loggedInUser.full_name}</i>, updated the Stage status of the lead contact to <b>{lead_stage}</b>"
+            print("stage updated")
+            prevLeadStatus = lead.stage
+            updatedLeadStatus = get_object_or_404(LeadStage, id=lead_stage)
+            lead.stage = updatedLeadStatus
+            text = f"<i>{loggedInUser.full_name}</i>, updated the status of the lead stage to <b>{updatedLeadStatus.stage_label}</b>"
+
+            # remove leadId to the updated StageElementIndexLogic
+            prevStageLoginStr = get_object_or_404(
+                StageElementIndexLogic, stage=prevLeadStatus)
+            prevStrLogicList = prevStageLoginStr.element_index_logic.split(',')
+            # print("prevStrLogicList: ", prevStrLogicList)
+            prevStrLogicList.remove(str(lead_pk))
+            # print("prevStrLogicList2: ", prevStrLogicList)
+            prevStageLoginStr.element_index_logic = ','.join(prevStrLogicList)
+            prevStageLoginStr.save()
+
+            # Add lead_pk to the updated StageElementIndexLogic
+            curStageLoginStr = get_object_or_404(
+                StageElementIndexLogic, stage=updatedLeadStatus)
+            if curStageLoginStr.element_index_logic == '' or (
+                    curStageLoginStr.element_index_logic is None):
+                curStageLoginStr.element_index_logic = str(lead_pk)
+            else:
+                curStrLogicList = curStageLoginStr.element_index_logic.split(
+                    ',')
+                # print("curStrLogicList: ", curStrLogicList)
+                curStrLogicList.append(lead_pk)
+                # print("curStrLogicList2: ", curStrLogicList)
+                curStageLoginStr.element_index_logic = ','.join(
+                    curStrLogicList)
+            curStageLoginStr.save()
 
         elif contact_person:
             lead.contact_person = contact_person
@@ -433,3 +464,51 @@ def deleteLeadTask(request, lead_task_pk):
         LeadProfileLog.objects.create(lead=leadTask.lead, log=text)
 
         return redirect('lead_profile', lead_pk=leadTask.lead.id)
+
+
+@ login_required(login_url='login')
+def updateLeadStatusInProfile(request):
+    loggedInUser = UserProfile.objects.get(user=request.user)
+    data = json.loads(request.body)
+    # print("data: ", data)
+    leadId = data.get('leadId')
+    prevLeadStatus = data.get('prevLeadStatus').split('_')[-1]
+    updatedLeadStatus = data.get('updatedLeadStatus').split('_')[-1]
+
+    leadStage = get_object_or_404(LeadStage, id=updatedLeadStatus)
+
+    lead = get_object_or_404(Lead, id=leadId, is_deleted=False)
+    lead.stage = leadStage
+    lead.save()
+
+    # remove leadid to the updated StageElementIndexLogic
+    prevStageLoginStr = get_object_or_404(StageElementIndexLogic,
+                                          stage=prevLeadStatus)
+    prevStrLogicList = prevStageLoginStr.element_index_logic.split(',')
+    # print("prevStrLogicList: ", prevStrLogicList)
+    prevStrLogicList.remove(leadId)
+    # print("prevStrLogicList2: ", prevStrLogicList)
+    prevStageLoginStr.element_index_logic = ','.join(prevStrLogicList)
+    prevStageLoginStr.save()
+
+    # Add leadId to the updated StageElementIndexLogic
+    curStageLoginStr = get_object_or_404(StageElementIndexLogic,
+                                         stage=updatedLeadStatus)
+    if curStageLoginStr.element_index_logic == '' or (
+            curStageLoginStr.element_index_logic is None):
+        curStageLoginStr.element_index_logic = str(leadId)
+    else:
+        curStrLogicList = curStageLoginStr.element_index_logic.split(',')
+        # print("curStrLogicList: ", curStrLogicList)
+        curStrLogicList.append(leadId)
+        # print("curStrLogicList2: ", curStrLogicList)
+        curStageLoginStr.element_index_logic = ','.join(curStrLogicList)
+    curStageLoginStr.save()
+
+    text = f"<i>{loggedInUser.full_name}</i>, updated the status of the lead stage to <b>{updatedLeadStatus.stage_label}</b>"
+    LeadProfileLog.objects.create(lead=lead, log=text)
+
+    return JsonResponse({
+        "success": True,
+        "msg": "updated",
+    })
