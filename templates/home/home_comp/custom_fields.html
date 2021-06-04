@@ -1,0 +1,129 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title text-center">Custom Fields</div>
+            </div>
+            <!-- Create a Custom Field -->
+            <div class="card-body">
+
+                <div class="row mb-4">
+                    <div class="col-lg col-md">
+                        <button class="btn btn-rounded waves-effect waves-light btn-outline-success py-2 float-right"
+                            data-toggle="modal" data-target="#create_custom_field_modal">
+                            <i class="mdi mdi-plus"></i> Create a Custom Field
+                        </button>
+
+                        <!-- Create a Custom Field modal content -->
+                        <div id="create_custom_field_modal" class="modal" tabindex="-1" role="dialog"
+                            aria-labelledby="vcenter" aria-hidden="true" style="display: none;">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header text-white bg-primary">
+                                        <h2>Create a Custom Field</h2>
+                                        <button type="button" class="close text-warning" data-dismiss="modal"
+                                            aria-hidden="true">×</button>
+                                    </div>
+
+                                    <div class="modal-body">
+                                        <form action="{% url 'create_custom_field' %}" method="POST">
+                                            {% csrf_token %}
+                                            <div class="form-group">
+                                                <label for="id_field_title" class="control-label">Field Title:</label>
+                                                {{custom_field_form.field_title}}
+                                            </div>
+
+                                            <div class="form-group">
+                                                <label for="id_field_type" class="control-label">Field Type:</label>
+                                                {{custom_field_form.field_type}}
+                                            </div>
+                                            <div class="form-group" id="custon_field_extra_option">
+
+
+                                            </div>
+
+
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default waves-effect"
+                                                    data-dismiss="modal">Close</button>
+                                                <button type="submit"
+                                                    class="btn btn-danger waves-effect waves-light">Save</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /.modal -->
+                    </div>
+
+                </div>
+
+
+                <div class="row">
+                    <div class="col-12">
+                        <ul>
+                            {% for customField in customFields %}
+                            <li> Field Name: <b>{{customField.field_title}}</b>, Field Type:
+                                <b>{{customField.get_field_type_display}}</b>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // console.log(`selectedFieldType: `, selectedFieldType);
+
+    var count = 0;
+    $('#id_field_type').change(function () {
+        const selectedFieldType = $('#id_field_type').find(":selected").text();
+        const selectedFieldTypeValue = $('#id_field_type').val();
+        console.log(`selectedFieldVal: `, selectedFieldTypeValue);
+        if (selectedFieldTypeValue == "drop_down" || selectedFieldTypeValue == "radio") {
+            // alert(selectedFieldTypeValue)
+            $('#custon_field_extra_option').children().remove();
+            $('#custon_field_extra_option').append(`
+                <div class="card px-3">
+                    <div class="card-body p-0" id="extra_field_card_body">
+                        <label class="control-label" for="option_${count}">Add Options for ${selectedFieldType}</label>
+                        <input type="text" class="form-control my-1" name="option_${count}" required id="option-id_${count}" />
+                    </div>
+                    <div class="card-footer px-0">
+                        <button class="btn btn-info" onclick="addInputField(this)">Add More Option</button>
+                    </div>
+                </div>
+            `);
+            count++;
+        }
+    });
+
+    function addInputField(item) {
+        console.log(count);
+        let hasError = false
+        for (let i = 0; i < count; i++) {
+            var curFieldVal = $(`#option-id_${i}`).val();
+            if (curFieldVal.trim().length <= 0) {
+                hasError = true;
+                break;
+            }
+        }
+
+        if (hasError == false) {
+            $('#extra_field_card_body').append(`
+                <input type="text" class="form-control my-1" name="option_${count}" required id="option-id_${count}" />
+            `);
+            count++;
+        } else {
+            // alert("Option field can't be blank");
+            toastr.error("Option Field shouldn't be blank!!",
+                'Error!', { "progressBar": true }
+            );
+        }
+    }
+</script>

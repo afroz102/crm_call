@@ -180,54 +180,17 @@ Company Setting
 </div>
 <!-- /.modal content -->
 
-
 {% if sortedStages %}
-<div class="row">
-    <div class="col-sm-12">
-        <div class="card">
-            <div class="card-header">
-                <h4 class="card-title text-center">Move Leads from one stage to another</h4>
-            </div>
-
-            <div class="card-body">
-                <form action="{% url 'move_stage_lead' %}" method="POST">
-                    {% csrf_token %}
-
-                    <div class="row mb-4">
-                        <div class="form-group col-4">
-                            <label class="" for="stage_moved_from">Move From</label>
-                            <select class="custom-select mr-sm-2" name="stage_moved_from" id="stage_moved_from">
-                                <option selected="">Choose...</option>
-                                {% for stage in sortedStages %}
-                                <option value="{{stage.id}}">{{stage.stage_label}}</option>
-                                {% endfor %}
-
-                            </select>
-                        </div>
-
-                        <div class="form-group col-4">
-                            <label class="" for="stage_mpved_to">Move To</label>
-                            <select class="custom-select mr-sm-2" name="stage_moved_to" id="stage_mpved_to">
-                                <option selected="">Choose...</option>
-                                {% for stage in sortedStages %}
-                                <option value="{{stage.id}}">{{stage.stage_label}}</option>
-                                {% endfor %}
-                            </select>
-
-                        </div>
-                        <div class="form-group mt-4">
-                            <button type="submit" class="btn btn-success waves-effect mx-2 mt-1">Confirm</button>
-                        </div>
-                    </div>
-
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Move lead of one stage to another stage -->
+{% include 'home/home_comp/move_stage_card.html' %}
 {% endif %}
 
+<!-- Custom Fieds -->
+{% include 'home/home_comp/custom_fields.html' %}
+
+
 {% endblock page_content %}
+
 
 
 {% block custom_js %}

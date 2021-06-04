@@ -10,4 +10,6 @@ urlpatterns = [
     path('stage-order/update/', views.updateStageOrder,
          name="update_stage_order"),
     path('move-stage-lead/', views.moveStageLead, name="move_stage_lead"),
+    path('custom/field/create/', views.createCustomField,
+         name="create_custom_field"),
 ]

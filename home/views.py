@@ -10,7 +10,8 @@ from django.contrib.auth.decorators import login_required
 from leads.models import Lead
 from users.models import UserProfile
 
-from .models import LeadStage, StageElementIndexLogic, StageIndexOrder
+from .forms import AddCustomFieldForm
+from .models import CustomField, CustomFieldChoise, LeadStage, StageElementIndexLogic, StageIndexOrder
 from .utils import sortQueryObj
 
 
@@ -26,12 +27,12 @@ def homePage(request):
 
 @login_required(login_url='login')
 def companySetting(request):
-    user = request.user
-    loggedInUser = UserProfile.objects.get(user=user)
-    stages = LeadStage.objects.filter(company=loggedInUser.company)
+    loggedInUser = UserProfile.objects.get(user=request.user)
+    company = loggedInUser.company
+    stages = LeadStage.objects.filter(company=company)
 
     orderIndexObj, created = StageIndexOrder.objects.get_or_create(
-        company=loggedInUser.company)
+        company=company)
 
     orderIndexList = []
     if not created:
@@ -41,9 +42,13 @@ def companySetting(request):
 
     # print(stages)
     # Z = [x for _, x in sorted(zip(Y, X))]
+    customFields = CustomField.objects.filter(company=company)
+
     context = {
         "sortedStages": sortedStages,
         "loggedInUser": loggedInUser,
+        "custom_field_form": AddCustomFieldForm(),
+        "customFields": customFields,
     }
     return render(request, 'home/company_setting_page.html', context)
 
@@ -198,5 +203,37 @@ def moveStageLead(request):
         # empty the logic order of MovedFrom
         movedFromIndexLogic.element_index_logic = ''
         movedFromIndexLogic.save()
+
+        return redirect('company_setting')
+
+
+@login_required(login_url='login')
+def createCustomField(request):
+    if request.method == 'POST':
+        loggedInUser = UserProfile.objects.get(user=request.user)
+        print(request.POST)
+        extra_field_size = len(request.POST)-3
+        print("extra_field_size: ", extra_field_size)
+
+        if request.POST.get('field_type') == 'drop_down' or (
+                request.POST.get('field_type') == 'drop_down'):
+            if(extra_field_size <= 0):
+                return redirect('company_setting')
+
+        form = AddCustomFieldForm(request.POST)
+        if form.is_valid():
+            print("form Valid")
+            customFieldObj = form.save(commit=False)
+            customFieldObj.company = loggedInUser.company
+            customFieldObj.save()
+
+            if extra_field_size > 0:
+                for index in range(extra_field_size):
+                    option_choise = request.POST.get(f"option_{index}")
+                    if option_choise:
+                        CustomFieldChoise.objects.create(
+                            custom_field=customFieldObj,
+                            choise_name=option_choise,
+                        )
 
         return redirect('company_setting')
