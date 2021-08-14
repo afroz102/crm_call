@@ -18,12 +18,13 @@
                 <h5 class="card-title">{{noteItem.title}}</h5>
                 <p class="card-text">{{noteItem.note}}</p>
                 <a type="button" class="mx-1 float-right text-danger font-weight-bold" data-toggle="modal"
-                    data-target="#verticalcenter_delete_note" id="delete_{{noteItem.id}}" onclick="deleteNote(this)">
+                    data-target="#verticalcenter_delete_note" id="delete_{{noteItem.id}}" data-noteid="{{noteItem.id}}"
+                    onclick="deleteNote(this)">
                     <i class="mdi mdi-delete-forever"></i>
                 </a>
                 <div class="float-right mx-2">
                     <a type="button" data-toggle="modal" data-target="#verticalcenter_edit_note"
-                        id="update_{{noteItem.id}}" onclick="updateNote(this)">
+                        id="update_{{noteItem.id}}" data-noteid="{{noteItem.id}}" onclick="updateNote(this)">
                         <i class="ti-pencil"></i>
                     </a>
                 </div>
@@ -130,9 +131,10 @@
 
     function updateNote(item) {
         // console.log(`item: `, item.id);
-        const itemIdList = item.id.split("_");
-        const leadNoteId = itemIdList[itemIdList.length - 1];
-        console.log(`leadNoteId: `, leadNoteId);
+        // const itemIdList = item.id.split("_");
+        // const leadNoteId = itemIdList[itemIdList.length - 1];
+        const leadNoteId = $(item).data('noteid');
+        // console.log(`leadNoteId: `, leadNoteId);
 
         // Card-body Elem
         const itemParentFirstChild = $($(item).parent()).parent()[0];
@@ -173,9 +175,10 @@
 
     function deleteNote(item) {
         // console.log(`item: `, item.id);
-        const itemIdList = item.id.split("_");
-        const leadNoteId = itemIdList[itemIdList.length - 1];
-        console.log(`leadNoteId: `, leadNoteId);
+        // const itemIdList = item.id.split("_");
+        // const leadNoteId = itemIdList[itemIdList.length - 1];
+        // console.log(`leadNoteId: `, leadNoteId);
+        const leadNoteId = $(item).data('noteid');
 
         const deleteModalId = document.getElementById('delete_note_modal_footer_id');
         // console.log(`deleteModalId`, deleteModalId);

@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -7,12 +8,16 @@ class Company(models.Model):
         User, on_delete=models.SET_NULL, null=True)
 
     company_name = models.CharField(max_length=200)
+    api_key = models.CharField(max_length=50, unique=True, default=uuid.uuid4())
     phone = models.CharField(max_length=20, blank=True)
     email = models.CharField(max_length=50, blank=True)
     address = models.CharField(max_length=250, blank=True)
     city = models.CharField(max_length=50, blank=True)
     logo = models.ImageField(
         upload_to='company_logo/', default="default/dummy-logo.jpeg",)
+
+    # to store logic for rendering the stage
+    stage_reorder_logic = models.TextField(blank=True)
 
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

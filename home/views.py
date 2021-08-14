@@ -1,24 +1,31 @@
 import json
+import uuid
 
-# from django.core.serializers import serialize
-from django.http.response import Http404, HttpResponseForbidden, JsonResponse
+from django.core.serializers import serialize
+from django.http.response import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required
-# from django.http import JsonResponse
+
 # from django.contrib.auth.models import User
 
 from leads.models import Lead
-from users.models import UserProfile
+from users.models import Company, UserProfile
 
 from .forms import AddCustomFieldForm
-from .models import CustomField, CustomFieldChoise, LeadStage, StageElementIndexLogic, StageIndexOrder
+from .models import CustomField, CustomFieldChoise, LeadStage
+# from .gmail_api import syncGmailAPI
 from .utils import sortQueryObj
 
 
 @login_required(login_url='login')
-def homePage(request):
+def homePage(request, api_key=None):
     user = request.user
     loggedInUser = UserProfile.objects.get(user=user)
+
+    # service = syncGmailAPI(user)
+    # print("credssss: ", service)
+    randomStr = uuid.uuid4()
+    print("randomStr: ", len(str(randomStr)), '-', randomStr)
     context = {
         "loggedInUser": loggedInUser,
     }
@@ -31,17 +38,23 @@ def companySetting(request):
     company = loggedInUser.company
     stages = LeadStage.objects.filter(company=company)
 
-    orderIndexObj, created = StageIndexOrder.objects.get_or_create(
-        company=company)
+    # orderIndexObj, created = StageIndexOrder.objects.get_or_create(
+    #     company=company)
 
-    orderIndexList = []
-    if not created:
-        orderIndexList = orderIndexObj.reorder_string.split(',')
-    sortedStages = sortQueryObj(stages, orderIndexList)
-    # w = [x for _, x in sorted(zip(Y, orderIndexList))]
+    # orderIndexList = []
+    # if not created:
+    #     orderIndexList = orderIndexObj.reorder_string.split(',')
+    # sortedStages = sortQueryObj(stages, orderIndexList)
 
-    # print(stages)
-    # Z = [x for _, x in sorted(zip(Y, X))]
+    stageReorderLogic = company.stage_reorder_logic
+    # print("stageReorderLogic: ", stageReorderLogic)
+    if stageReorderLogic.strip() != '':
+        sortedStages = sortQueryObj(stages, stageReorderLogic.split(','))
+    else:
+        sortedStages = []
+
+    # print("sortedStages: ", sortedStages)
+
     customFields = CustomField.objects.filter(company=company)
 
     context = {
@@ -65,38 +78,31 @@ def addStage(request):
             added_by=request.user,
         )
 
-        stageOrderIndex, created = StageIndexOrder.objects.get_or_create(
-            company=company)
-        if created or stageOrderIndex.reorder_string == '' or (
-                stageOrderIndex.reorder_string is None):
-            stageOrderIndex.reorder_string = str(newStageObj.id)
+        stageReorderLogic = company.stage_reorder_logic
+        if stageReorderLogic.strip() == '':
+            company.stage_reorder_logic = str(newStageObj.id)
         else:
-            stageOrderIndex.reorder_string = stageOrderIndex.reorder_string + \
-                ',' + str(newStageObj.id)
-        stageOrderIndex.save()
+            company.stage_reorder_logic = f"{stageReorderLogic},{str(newStageObj.id)}"
+        company.save()
 
-        # Create a Element index Logic table
-        StageElementIndexLogic.objects.create(
-            company=company, stage=newStageObj)
-        # print("saved")
-        # print("label created: ", newStageObj)
         return redirect('company_setting')
 
 
-# Updating order of stages in company setting page by dragging and dropping
+# Updating order of stages in company setting page whem dragged
 @login_required(login_url='login')
 def updateStageOrder(request):
     if request.method == 'POST':
         loggedInUser = UserProfile.objects.get(user=request.user)
-        stageOrderIndex = StageIndexOrder.objects.get(
-            company=loggedInUser.company)
+        company = loggedInUser.company
+        stageReorderLogic = company.stage_reorder_logic
+
         data = json.loads(request.body)
         draggedItemId = data['draggedItemId']
         oldIndexItem = data['oldIndexItem']
         newIndexItem = data['newIndexItem']
 
         # Split string by comma
-        orderList = stageOrderIndex.reorder_string.split(',')
+        orderList = stageReorderLogic.split(',')
         # print("orderList1: ", orderList)
 
         # Delete old index of dragged element
@@ -108,8 +114,9 @@ def updateStageOrder(request):
         # print("orderList3: ", orderList)
         newStr = ",".join(orderList)
         # print("new str: ", newStr)
-        stageOrderIndex.reorder_string = newStr
-        stageOrderIndex.save()
+
+        company.stage_reorder_logic = newStr
+        company.save()
 
         return JsonResponse({"msg": "success"})
 
@@ -120,34 +127,30 @@ def deleteStage(request, stage_pk):
     if request.method == 'POST':
         loggedInUser = UserProfile.objects.get(user=request.user)
         company = loggedInUser.company
+        stageReorderLogic = company.stage_reorder_logic
 
         stage = get_object_or_404(LeadStage, id=stage_pk)
         if company != stage.company:
             return HttpResponseForbidden()
 
-        try:
-            stageOrder = StageElementIndexLogic.objects.get(stage=stage_pk)
-        except StageElementIndexLogic.DoesNotExist:
-            stage.delete()
-            return JsonResponse({
-                "success": True,
-                "msg": "Successfully deleted!!",
-            })
+        leadsReorderLogic = stage.leads_reorder_logic
 
-        if stageOrder.element_index_logic == '' or (
-                stageOrder.element_index_logic is None):
+        # check, if there is any leads in this stage
+        if leadsReorderLogic.strip() == '':
             stage.delete()
 
-            stageLogicOrder = StageIndexOrder.objects.get(company=company)
-            logicOrderStrList = stageLogicOrder.reorder_string.split(',')
-
+            logicOrderStrList = stageReorderLogic.split(',')
             # print("logicOrderStrList: ", logicOrderStrList)
+
             logicOrderStrList.remove(str(stage_pk))
             # print(logicOrderStrList)
-            newStrOrder = ",".join(logicOrderStrList)
+
+            newStageReorderLogic = ",".join(logicOrderStrList)
             # print("newStrOrder: ", newStrOrder)
-            stageLogicOrder.reorder_string = newStrOrder
-            stageLogicOrder.save()
+
+            company.stage_reorder_logic = newStageReorderLogic
+            company.save()
+
             return JsonResponse({
                 "success": True,
                 "msg": "Successfully deleted!!",
@@ -155,7 +158,8 @@ def deleteStage(request, stage_pk):
         else:
             return JsonResponse({
                 "success": False,
-                "msg": "Can't delete this stage. Please move all the leads inside of this stage and try again."
+                "msg": "Can't delete this stage. Please move all the leads" +
+                " inside of this stage and try again."
             })
 
 
@@ -163,46 +167,47 @@ def deleteStage(request, stage_pk):
 @login_required(login_url='login')
 def moveStageLead(request):
     if request.method == 'POST':
-        loggedInUser = UserProfile.objects.get(user=request.user)
-        company = loggedInUser.company
+        company = UserProfile.objects.get(user=request.user).company
+
         movedFrom = request.POST.get('stage_moved_from')
         movedTo = request.POST.get('stage_moved_to')
         # print(movedFrom, '-', movedTo)
 
-        movedFromIndexLogic = StageElementIndexLogic.objects.get(
-            company=company, stage=movedFrom)
-        movedToIndexLogic = StageElementIndexLogic.objects.get(
-            company=company, stage=movedTo)
-
-        print(movedFromIndexLogic.element_index_logic,
-              '-', movedToIndexLogic.element_index_logic)
-
+        movedFromStage = LeadStage.objects.get(id=movedFrom)
         # Update status of all the leads which are moved
-        newStage = LeadStage.objects.get(id=movedTo)
+        movedToStage = LeadStage.objects.get(id=movedTo)
         # print(newStage.stage_label)
 
-        leadIds = movedFromIndexLogic.element_index_logic.split(',')
-        # print("leadIds: ", leadIds)
+        if company != movedFromStage.company:
+            return HttpResponseForbidden()
 
-        for leadId in leadIds:
-            newLead = Lead.objects.get(id=leadId)
-            # print("lead Saved: ", newLead.stage.stage_label)
-            newLead.stage = newStage
-            newLead.save()
-            # print("lead updated: ", newLead.stage.stage_label)
+        movedFromLeadIds = movedFromStage.leads_reorder_logic
+        movedToLeadIds = movedToStage.leads_reorder_logic
+
+        # print(movedFromLeadIds, '-', movedToLeadIds)
+
+        if movedFromLeadIds.strip() != '':
+            leadIds = movedFromLeadIds.split(',')
+            # print("leadIds: ", leadIds)
+
+            for leadId in leadIds:
+                newLead = get_object_or_404(Lead, id=leadId)
+                newLead.stage = movedToStage
+                newLead.save()
+                # print("lead updated: ", newLead.stage.stage_label)
+        else:
+            return redirect('company_setting')
 
         # Move the order indexing from movedFrom to movedTo .
-        if movedToIndexLogic.element_index_logic is None or (
-                movedToIndexLogic.element_index_logic == ''):
-            movedToIndexLogic.element_index_logic = movedFromIndexLogic.element_index_logic
+        if movedToLeadIds == '':
+            movedToStage.leads_reorder_logic = movedFromLeadIds
         else:
-            movedToIndexLogic.element_index_logic = movedToIndexLogic.element_index_logic + \
-                ',' + movedFromIndexLogic.element_index_logic
-        movedToIndexLogic.save()
+            movedToStage.leads_reorder_logic = f"{movedToLeadIds},{movedFromLeadIds}"
+        movedToStage.save()
 
         # empty the logic order of MovedFrom
-        movedFromIndexLogic.element_index_logic = ''
-        movedFromIndexLogic.save()
+        movedFromStage.leads_reorder_logic = ''
+        movedFromStage.save()
 
         return redirect('company_setting')
 
@@ -237,3 +242,42 @@ def createCustomField(request):
                         )
 
         return redirect('company_setting')
+
+
+# ---------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
+# ------------------------------------------APIS-----------------------------------------
+# ---------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------
+def apiCompanySetting(request):
+    api_key = request.GET.get('key')
+    # print(api_key)
+
+    if not api_key or len(api_key) < 36:
+        return JsonResponse({
+            "success": False,
+            "msg": "Api Key is missing or invalid",
+        }, status=400)
+
+    try:
+        company = Company.objects.get(api_key=api_key)
+    except Company.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "msg": "invalid Key",
+        }, status=404)
+
+    stages = LeadStage.objects.filter(company=company)
+
+    stageReorderLogic = company.stage_reorder_logic
+    # print("stageReorderLogic: ", stageReorderLogic)
+    if stageReorderLogic.strip() != '':
+        sortedStages = sortQueryObj(stages, stageReorderLogic.split(','))
+    else:
+        sortedStages = []
+
+    return JsonResponse({
+        "success": True,
+        "key": api_key,
+        "stage": serialize('json', sortedStages)
+    })

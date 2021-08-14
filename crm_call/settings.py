@@ -35,6 +35,9 @@ INSTALLED_APPS = [
     'leads',
     'home',
     'users',
+
+
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -148,3 +151,13 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'sahiljmi102@gmail.com'
 EMAIL_HOST_PASSWORD = 'Sahilraza@1029534'
+
+
+GMAIL_CLIENT_ID = '131220023065-d1e11c83uphalbt0ktp51ag4opc1gdpp.apps.googleusercontent.com'
+GMAIL_CLIENT_SECRET = '5ieIosaJDY_fdwfYiOZDWz_g'
+GMAIL_SCOPES = [
+    'https://www.googleapis.com/auth/gmail.readonly',
+    'https://www.googleapis.com/auth/gmail.modify',
+    'https://www.googleapis.com/auth/gmail.send'
+]
+REDIRECT_URI = 'http://localhost:8000/'

@@ -1,0 +1,73 @@
+{% load static %}
+
+
+
+{% if not gmail_cred %}
+<button data-toggle="modal" data-target="#send_email_to_profile_user" class="btn rounded btn-success float-right mx-2">
+    <i class="far fa-envelope mr-1"></i> Send Email
+</button>
+{% else %}
+<form method="post" action="{#% url 'sync_with_gmail' %}">
+    {% csrf_token %}
+    <input type="submit" name="authorise" value="Sync With Gmail" class="btn btn-info float-right mx-2">
+</form>
+{% endif %}
+
+<!--send Email button modal content -->
+<div id="send_email_to_profile_user" class="modal bs-example-modal-lg" tabindex="-1" role="dialog"
+    aria-labelledby="vcenter" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header text-center bg-primary">
+                <h3 class="modal-title font-weight-bold text-white" id="vcenter">
+                    Update Your Portfolio</h3>
+                <button type="button" class="custom_icon_class close text-warning" data-dismiss="modal"
+                    aria-hidden="true">×</button>
+            </div>
+            <div class="modal-body">
+                <form action="{#% url 'send_email_to_profile' userProfile.id %}" method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="form-group">
+                                <input type="email" id="example-email" name="email-to" class="form-control"
+                                    placeholder="To">
+                            </div>
+
+                            <div class="form-group">
+                                <input type="text" id="example-subject" name="email-subject" class="form-control"
+                                    placeholder="Subject">
+                            </div>
+
+                            <div id="summernote"></div>
+
+                        </div>
+                    </div>
+
+
+                    <div class="modal-footer">
+                        <button class="btn btn-dark" data-dismiss="modal" id="discard-compose">Discard</button>
+                        <button class="btn btn-success waves-light float-right" onclick="sendMail(event)">
+                            <i class="far fa-envelope"></i> Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal content -->
+
+
+{% block custom_js %}
+<script>
+    $(document).ready(function () {
+        $('#summernote').summernote({
+            placeholder: 'Type your email Here',
+            tabsize: 2,
+            height: 300,
+            followingToolbar: false
+        });
+    });
+</script>
+{% endblock custom_js %}

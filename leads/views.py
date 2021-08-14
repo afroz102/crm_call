@@ -4,14 +4,13 @@ from collections import defaultdict
 # from django.core.serializers import serialize
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.messages.api import success
-from django.http import JsonResponse, Http404
+from django.http import JsonResponse
 from django.http.response import HttpResponseForbidden
 from django.shortcuts import get_object_or_404, render, redirect
 # from django.shortcuts import get_object_or_404
 
 from home.utils import sortQueryObj
-from home.models import LeadStage, StageIndexOrder, StageElementIndexLogic
+from home.models import LeadStage
 from users.models import UserProfile
 
 from .forms import AddLeadForm
@@ -27,51 +26,31 @@ def leadPage(request):
 
     stages = LeadStage.objects.filter(company=company)
 
-    leads = Lead.objects.filter(company=company)
+    leads = Lead.objects.filter(company=company, is_deleted=False)
 
     # For displaying stages in sorted order
-    orderIndexObj, created = StageIndexOrder.objects.get_or_create(
-        company=company)
+    stageReorderLogic = company.stage_reorder_logic
+    orderIndexList = stageReorderLogic.split(',')
 
-    orderIndexList = []
-    if not created:
-        orderIndexList = orderIndexObj.reorder_string.split(',')
     sortedStages = sortQueryObj(stages, orderIndexList)
 
     # Logics For displaying item in respective stages in sorted manner
-    orderIndexLogicList = []
+    leadsReorderLogicList = []
     for stageItem in stages:
-        # print(type(stageItem.stage_label), '-', stageItem.stage_label)
-        try:
-            orderIndexLogicObj = StageElementIndexLogic.objects.get(
-                company=company, stage=stageItem)
-
-        except StageElementIndexLogic.DoesNotExist:
-            # print("Hello")
-            orderIndexLogicObj = StageElementIndexLogic.objects.create(
-                company=company, stage=stageItem)
+        newLogicList = stageItem.leads_reorder_logic.split(',')
 
         # For listing all sorted index in a seperate stage fields
-        orderIndexList = []
-        if (orderIndexLogicObj.element_index_logic) is not None or (
-                orderIndexLogicObj.element_index_logic != ''):
-            orderIndexList = orderIndexLogicObj.element_index_logic.split(',')
-
         newLogicObj = {}
-        newLogicObj[stageItem.stage_label] = orderIndexList
-        orderIndexLogicList.append(newLogicObj)
+        newLogicObj[stageItem.stage_label] = newLogicList
+        leadsReorderLogicList.append(newLogicObj)
 
-    # print("orderIndexLogicList: ", orderIndexLogicList)
+    # print("leadsReorderLogicList: ", leadsReorderLogicList)
 
     # a default dict, for displaying item in respective stages in sorted manner
     columnOrder = defaultdict(list)
-    for orderIndexLogic in orderIndexLogicList:
-        # print("orderIndexLogic: ", orderIndexLogic)
-
-        for stage_label, leadIds in orderIndexLogic.items():
-            # print(stage_label, ' - ', leadIds)
-
-            # if len(leadIds) > 0:(length already > 0)
+    for leadsReorderLogic in leadsReorderLogicList:
+        # print("leadsReorderLogic: ", leadsReorderLogic)
+        for stage_label, leadIds in leadsReorderLogic.items():
             for leadId in leadIds:
                 # print("leadId: ", leadId)
 
@@ -100,8 +79,7 @@ def leadPage(request):
 
 @ login_required(login_url='login')
 def addLead(request):
-    loggedInUser = get_object_or_404(
-        UserProfile, user=request.user, is_deleted=False)
+    loggedInUser = get_object_or_404(UserProfile, user=request.user)
     company = loggedInUser.company
 
     if request.method == 'POST':
@@ -112,21 +90,18 @@ def addLead(request):
             newLeadObj.added_by = request.user
             newLeadObj.save()
 
-            # Craete a render logic method for the given stage
-            orderIndexLogicObj, created = StageElementIndexLogic.objects.get_or_create(
-                company=company, stage=form.cleaned_data.get('stage'))
+            stage = newLeadObj.stage
 
+            leadsReorderLogic = stage.leads_reorder_logic
             # if element_index_logic is empty or created for the first time
-            if created or orderIndexLogicObj.element_index_logic == '' or (
-                    orderIndexLogicObj.element_index_logic is None):
-                orderIndexLogicObj.element_index_logic = str(newLeadObj.id)
+            if leadsReorderLogic == '':
+                stage.leads_reorder_logic = str(newLeadObj.id)
             else:
-                orderIndexLogicObj.element_index_logic = orderIndexLogicObj.element_index_logic + \
-                    ',' + str(newLeadObj.id)
-            orderIndexLogicObj.save()
+                stage.leads_reorder_logic = \
+                    f"{leadsReorderLogic},{str(newLeadObj.id)}"
+            stage.save()
 
             # messages.success(request, 'Changes successfully saved.')
-
             return redirect('leads_page')
 
         else:
@@ -147,8 +122,8 @@ def addLead(request):
             }
 
             messages.add_message(
-                request, messages.ERROR, 'Something went wrong.' +
-                'Please check all the fields and Try Again.'
+                request, messages.ERROR, 'Something went wrong.\
+                    Please check all the fields and Try Again.'
             )
             return render(request, 'leads/add_lead.html', context)
     else:
@@ -160,45 +135,43 @@ def addLead(request):
         return render(request, 'leads/add_lead.html', context)
 
 
+# Update leads stage status on leads page, when dragged
 @login_required(login_url='login')
 def updateLeadStatus(request):
     if request.method == 'POST':
         loggedInUser = get_object_or_404(
             UserProfile, user=request.user, is_deleted=False)
-        data = json.loads(request.body)
 
+        data = json.loads(request.body)
         # print("data: ", data)
 
         lead_pk = data['terget_lead_pk']
-        moved_from_stage_pk = data['moved_from_stage'].split('_')[-1]
-        moved_to_stage_pk = data['moved_to_stage'].split('_')[-1]
-        updatedIndexList = data['updatedIndexList']
+        movedFromStagePk = data['moved_from_stage'].split('_')[-1]
+        movedToStagePk = data['moved_to_stage'].split('_')[-1]
+        updatedLeadsIds = data['updatedIndexList']
 
         # Updating stage of targeted lead
-        moved_to_stage_obj = LeadStage.objects.get(id=moved_to_stage_pk)
+        movedToStage = LeadStage.objects.get(id=movedToStagePk)
 
         lead = get_object_or_404(Lead, id=lead_pk, is_deleted=False)
         if loggedInUser.company != lead.company:
             return HttpResponseForbidden()
 
-        lead.stage = moved_to_stage_obj
+        lead.stage = movedToStage
         lead.save()
-
         # print("Lead stage updated: ", lead.stage)
 
         # Updating order index of stage, from where the lead is moved
-        movedFromStage = StageElementIndexLogic.objects.get(
-            stage=moved_from_stage_pk)
-        movedFromStage.element_index_logic = updatedIndexList['movedFromStageOrder']
+        movedFromStage = LeadStage.objects.get(id=movedFromStagePk)
+        movedFromStage.leads_reorder_logic = \
+            updatedLeadsIds['movedFromStageOrder']
         movedFromStage.save()
-        # print("movedFromStage updated: ", movedFromStage.element_index_logic)
+        print("movedFromStage updated: ", movedFromStage.leads_reorder_logic)
 
         # Updating order index of stage, to where the lead is moved
-        movedToStage = StageElementIndexLogic.objects.get(
-            stage=moved_to_stage_pk)
-        movedToStage.element_index_logic = updatedIndexList['movedToStageOrder']
+        movedToStage.leads_reorder_logic = updatedLeadsIds['movedToStageOrder']
         movedToStage.save()
-        # print("movedToStage updated: ", movedToStage.element_index_logic)
+        print("movedFromStage updated: ", movedToStage.leads_reorder_logic)
 
     return JsonResponse({"msg": "stage updated"})
 
@@ -210,17 +183,14 @@ def leadProfile(request, lead_pk):
     company = loggedInUser.company
 
     lead = get_object_or_404(Lead, id=lead_pk, is_deleted=False)
+    # If lead doesn't belong to the company. send forbidden Error
+    if lead.company != company:
+        return HttpResponseForbidden()
 
     # For displaying stages in sorted order
     stages = LeadStage.objects.filter(company=company)
-    orderIndexObj = StageIndexOrder.objects.get(company=company)
-    # some operation to sort stages
-    orderIndexList = orderIndexObj.reorder_string.split(',')
-    sortedStages = sortQueryObj(stages, orderIndexList)
-
-    # If lead doesn't belong to the company. display error forbidden message
-    if lead.company != company:
-        return HttpResponseForbidden()
+    stageReorderLogic = company.stage_reorder_logic
+    sortedStages = sortQueryObj(stages, stageReorderLogic.split(','))
 
     leadLogs = LeadProfileLog.objects.filter(
         lead=lead_pk).order_by('-created_at')
@@ -239,7 +209,7 @@ def leadProfile(request, lead_pk):
         "leadTasks": leadTasks,
         "sortedStages": sortedStages,
         # "stageOrderIndexList": json.dumps(orderIndexList),
-        "stageOrderIndexStr": orderIndexObj.reorder_string,
+        "stageOrderIndexStr": stageReorderLogic,
     }
     return render(request, 'leads/lead_profile.html', context)
 
@@ -270,60 +240,56 @@ def updateLeadProfile(request, lead_pk):
         if title:
             lead.title = title
             # Text for Lead Profile Log
-            text = f"<i>{loggedInUser.full_name}</i>, updated the title of lead to <b>{title}</b>"
+            text = f"<i>{loggedInUser.full_name}</i>, updated the title of \
+                lead to <b>{title}</b>"
 
         elif lead_stage:
             # print("stage updated")
-            prevLeadStatus = lead.stage
-            updatedLeadStatus = get_object_or_404(LeadStage, id=lead_stage)
-            lead.stage = updatedLeadStatus
-            text = f"<i>{loggedInUser.full_name}</i>, updated the status of the lead stage to <b>{updatedLeadStatus.stage_label}</b>"
+            prevLeadStage = lead.stage
+            updatedLeadStage = get_object_or_404(LeadStage, id=lead_stage)
+            lead.stage = updatedLeadStage
+            text = f"<i>{loggedInUser.full_name}</i>, updated the status \
+                of the lead stage to <b>{updatedLeadStage.stage_label}</b>"
 
             # remove leadId to the updated StageElementIndexLogic
-            prevStageLoginStr = get_object_or_404(
-                StageElementIndexLogic, stage=prevLeadStatus)
-            prevStrLogicList = prevStageLoginStr.element_index_logic.split(',')
-            # print("prevStrLogicList: ", prevStrLogicList)
+            prevStrLogicList = prevLeadStage.leads_reorder_logic.split(',')
             prevStrLogicList.remove(str(lead_pk))
-            # print("prevStrLogicList2: ", prevStrLogicList)
-            prevStageLoginStr.element_index_logic = ','.join(prevStrLogicList)
-            prevStageLoginStr.save()
+            prevLeadStage.leads_reorder_logic = ','.join(prevStrLogicList)
+            prevLeadStage.save()
 
             # Add lead_pk to the updated StageElementIndexLogic
-            curStageLoginStr = get_object_or_404(
-                StageElementIndexLogic, stage=updatedLeadStatus)
-            if curStageLoginStr.element_index_logic == '' or (
-                    curStageLoginStr.element_index_logic is None):
-                curStageLoginStr.element_index_logic = str(lead_pk)
+            curStageLogicStr = updatedLeadStage.leads_reorder_logic
+            if curStageLogicStr == '':
+                updatedLeadStage.leads_reorder_logic = str(lead_pk)
             else:
-                curStrLogicList = curStageLoginStr.element_index_logic.split(
-                    ',')
-                # print("curStrLogicList: ", curStrLogicList)
-                curStrLogicList.append(str(lead_pk))
-                # print("curStrLogicList2: ", curStrLogicList)
-                curStageLoginStr.element_index_logic = ','.join(
-                    curStrLogicList)
-            curStageLoginStr.save()
+                updatedLeadStage.leads_reorder_logic = \
+                    f"{curStageLogicStr},{str(lead_pk)}"
+            updatedLeadStage.save()
 
         elif contact_person:
             lead.contact_person = contact_person
-            text = f"<i>{loggedInUser.full_name}</i>, updated the Name of the lead contact to <b>{contact_person}</b>"
+            text = f"<i>{loggedInUser.full_name}</i>, updated the Name of the \
+                lead contact to <b>{contact_person}</b>"
 
         elif contact_email:
             lead.email = contact_email
-            text = f"<i>{loggedInUser.full_name}</i>, updated the Email of contact to <b>{contact_email}</b>"
+            text = f"<i>{loggedInUser.full_name}</i>, updated the Email of \
+                contact to <b>{contact_email}</b>"
 
         elif phone:
             lead.phone = phone
-            text = f"<i>{loggedInUser.full_name}</i>, updated the Phone of contact to <b>{phone}</b>"
+            text = f"<i>{loggedInUser.full_name}</i>, updated the Phone of \
+                contact to <b>{phone}</b>"
 
         elif designation:
             lead.designation = designation
-            text = f"<i>{loggedInUser.full_name}</i>, updated the Designation of contact to <b>{designation}</b>"
+            text = f"<i>{loggedInUser.full_name}</i>, updated the Designation \
+                of contact to <b>{designation}</b>"
 
         elif source:
             lead.source = source
-            text = f"<i>{loggedInUser.full_name}</i>, updated the Source of contact to <b>{source}</b>"
+            text = f"<i>{loggedInUser.full_name}</i>, updated the Source of \
+                contact to <b>{source}</b>"
 
         lead.save()
         LeadProfileLog.objects.create(lead=lead, log=text)
@@ -352,7 +318,8 @@ def addLeadNote(request, lead_pk):
             updated_by=user,
         )
         # Create a log of it
-        text = f"<i>{loggedInUser.full_name}</i>, Added a Note with title <b>{note_title}</b>"
+        text = f"<i>{loggedInUser.full_name}</i>, Added a Note with \
+            title <b>{note_title}</b>"
         LeadProfileLog.objects.create(lead=lead, log=text)
 
         return redirect('lead_profile', lead_pk=lead_pk)
@@ -373,7 +340,8 @@ def updateLeadNote(request, lead_note_pk):
         leadNote.note = request.POST['lead_note']
         leadNote.save()
         # Create a log of it
-        text = f"<i>{loggedInUser.full_name}</i>, Updated the Note <b>{leadNote.title}</b>"
+        text = f"<i>{loggedInUser.full_name}</i>, Updated the \
+            Note <b>{leadNote.title}</b>"
         LeadProfileLog.objects.create(lead=leadNote.lead, log=text)
 
         return redirect('lead_profile', lead_pk=leadNote.lead.id)
@@ -393,7 +361,8 @@ def deleteLeadNote(request, lead_note_pk):
         leadNote.is_deleted = True
         leadNote.save()
         # Create a log of it
-        text = f"<i>{loggedInUser.full_name}</i>, Deleted the Note <b>{leadNote.title}</b>"
+        text = f"<i>{loggedInUser.full_name}</i>, Deleted the \
+            Note <b>{leadNote.title}</b>"
         LeadProfileLog.objects.create(lead=leadNote.lead, log=text)
 
         return redirect('lead_profile', lead_pk=leadNote.lead.id)
@@ -420,7 +389,8 @@ def addLeadTask(request, lead_pk):
             updated_by=user,
         )
         # Create a log of it
-        text = f"<i>{loggedInUser.full_name}</i>, Added a Task with title <b>{task_title}</b>"
+        text = f"<i>{loggedInUser.full_name}</i>, Added a Task \
+            with title <b>{task_title}</b>"
         LeadProfileLog.objects.create(lead=lead, log=text)
 
         return redirect('lead_profile', lead_pk=lead_pk)
@@ -441,7 +411,8 @@ def updateLeadTask(request, lead_task_pk):
         leadTask.task = request.POST.get('lead_task')
         leadTask.save()
         # Create a log of it
-        text = f"<i>{loggedInUser.full_name}</i>, Updated the task <b>{leadTask.title}</b>"
+        text = f"<i>{loggedInUser.full_name}</i>, Updated \
+            the task <b>{leadTask.title}</b>"
         LeadProfileLog.objects.create(lead=leadTask.lead, log=text)
 
         return redirect('lead_profile', lead_pk=leadTask.lead.id)
@@ -460,7 +431,8 @@ def deleteLeadTask(request, lead_task_pk):
         leadTask.is_deleted = True
         leadTask.save()
         # Create a log of it
-        text = f"<i>{loggedInUser.full_name}</i>, Deleted the Task <b>{leadTask.title}</b>"
+        text = f"<i>{loggedInUser.full_name}</i>, Deleted \
+            the Task <b>{leadTask.title}</b>"
         LeadProfileLog.objects.create(lead=leadTask.lead, log=text)
 
         return redirect('lead_profile', lead_pk=leadTask.lead.id)
@@ -475,37 +447,29 @@ def updateLeadStatusInProfile(request):
     prevLeadStatus = data.get('prevLeadStatus').split('_')[-1]
     updatedLeadStatus = data.get('updatedLeadStatus').split('_')[-1]
 
-    leadStage = get_object_or_404(LeadStage, id=updatedLeadStatus)
+    prevLeadStage = get_object_or_404(LeadStage, id=prevLeadStatus)
+    curLeadStage = get_object_or_404(LeadStage, id=updatedLeadStatus)
 
     lead = get_object_or_404(Lead, id=leadId, is_deleted=False)
-    lead.stage = leadStage
+    lead.stage = curLeadStage
     lead.save()
 
-    # remove leadid to the updated StageElementIndexLogic
-    prevStageLoginStr = get_object_or_404(StageElementIndexLogic,
-                                          stage=prevLeadStatus)
-    prevStrLogicList = prevStageLoginStr.element_index_logic.split(',')
-    # print("prevStrLogicList: ", prevStrLogicList)
+    # remove leadId to the updated Stage LeadReorderLogic
+    prevStrLogicList = prevLeadStage.leads_reorder_logic.split(',')
     prevStrLogicList.remove(str(leadId))
-    # print("prevStrLogicList2: ", prevStrLogicList)
-    prevStageLoginStr.element_index_logic = ','.join(prevStrLogicList)
-    prevStageLoginStr.save()
+    prevLeadStage.leads_reorder_logic = ','.join(prevStrLogicList)
+    prevLeadStage.save()
 
-    # Add leadId to the updated StageElementIndexLogic
-    curStageLoginStr = get_object_or_404(StageElementIndexLogic,
-                                         stage=updatedLeadStatus)
-    if curStageLoginStr.element_index_logic == '' or (
-            curStageLoginStr.element_index_logic is None):
-        curStageLoginStr.element_index_logic = str(leadId)
+    # Add lead_pk to the updated Stage LeadReorderLogic
+    curStageLogicStr = curLeadStage.leads_reorder_logic
+    if curStageLogicStr == '':
+        curLeadStage.leads_reorder_logic = str(leadId)
     else:
-        curStrLogicList = curStageLoginStr.element_index_logic.split(',')
-        # print("curStrLogicList: ", curStrLogicList)
-        curStrLogicList.append(str(leadId))
-        # print("curStrLogicList2: ", curStrLogicList)
-        curStageLoginStr.element_index_logic = ','.join(curStrLogicList)
-    curStageLoginStr.save()
+        curLeadStage.leads_reorder_logic = f"{curStageLogicStr},{str(leadId)}"
+    curLeadStage.save()
 
-    text = f"<i>{loggedInUser.full_name}</i>, updated the status of the lead stage to <b>{leadStage}</b>"
+    text = f"<i>{loggedInUser.full_name}</i>, updated the status of the \
+        lead stage to <b>{curLeadStage}</b>"
     LeadProfileLog.objects.create(lead=lead, log=text)
 
     return JsonResponse({

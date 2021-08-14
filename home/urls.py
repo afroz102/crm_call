@@ -12,4 +12,8 @@ urlpatterns = [
     path('move-stage-lead/', views.moveStageLead, name="move_stage_lead"),
     path('custom/field/create/', views.createCustomField,
          name="create_custom_field"),
+
+
+    # API releted
+    path('api/setting/', views.apiCompanySetting),
 ]

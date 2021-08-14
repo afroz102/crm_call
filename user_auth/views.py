@@ -1,3 +1,4 @@
+import uuid
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -50,10 +51,26 @@ def register_user(request):
         newUser.is_active = False
         newUser.save()
 
+        # TO save unique api key for company
+        api_key = uuid.uuid4()
+        try:
+            company = Company.objects.get(api_key=str(api_key))
+        except Company.DoesNotExist:
+            company = None
+
+        # verifying in loop until we get a unique key
+        while company:
+            api_key = uuid.uuid4()
+            try:
+                company = Company.objects.get(api_key=str(api_key))
+            except Company.DoesNotExist:
+                company = None
+
         # Create a Company Object, user as  it's super admin
         companyObject = Company.objects.create(
             company_name=company_name,
             super_admin=newUser,
+            api_key=str(api_key),
         )
 
         # Create a User Profile Object with user and agency
