@@ -8,7 +8,7 @@ class Company(models.Model):
         User, on_delete=models.SET_NULL, null=True)
 
     company_name = models.CharField(max_length=200)
-    api_key = models.CharField(max_length=50, unique=True, default=uuid.uuid4())
+    api_key = models.CharField(max_length=50, default=uuid.uuid4())
     phone = models.CharField(max_length=20, blank=True)
     email = models.CharField(max_length=50, blank=True)
     address = models.CharField(max_length=250, blank=True)

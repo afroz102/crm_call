@@ -10,8 +10,7 @@ class Lead(models.Model):
     company = models.ForeignKey(Company, on_delete=models.CASCADE)
     stage = models.ForeignKey(LeadStage, on_delete=models.CASCADE)
     title = models.CharField(max_length=50)
-    lead_api_key = models.CharField(
-        max_length=50, unique=True, default=uuid.uuid4())
+    lead_api_key = models.CharField(max_length=50, default=uuid.uuid4())
     contact_person = models.CharField(max_length=50)
     email = models.CharField(max_length=50, blank=True)
     phone = models.CharField(max_length=50, blank=True)
